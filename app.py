@@ -60,8 +60,9 @@ class Ingredients(db.Model):
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 def index():
-    recipe = Recipe.query.filter_by(name='Test Recipe 2').first()
-    recipe_name = recipe.id
+    # recipe = Recipe.query.filter_by(name='Test Recipe 2').first()
+    # recipe_name = recipe.id
+    db.create_all()
 
     return render_template('index.html', recipe_name = recipe_name)
 
