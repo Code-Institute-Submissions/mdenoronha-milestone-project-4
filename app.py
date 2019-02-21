@@ -63,8 +63,11 @@ def index():
     # recipe = Recipe.query.filter_by(name='Test Recipe 2').first()
     # recipe_name = recipe.id
     db.create_all()
-
-    return render_template('index.html', recipe_name = recipe_name)
+    recipe1 = Recipe(name="Test")
+    db.session.add(recipe1)
+    db.session.commit()
+    
+    return render_template('index.html')
 
 if __name__ == '__main__':
     app.run(host=os.environ.get('IP'),
