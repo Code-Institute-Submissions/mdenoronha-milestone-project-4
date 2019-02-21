@@ -8,8 +8,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'dsaf0897sfdg45sfdgfdsaqzdf98sdf0a'
 db = SQLAlchemy(app)
 
-db.create_all()
-
 recipe_ingredients = db.Table('recipe_ingredients',
     db.Column('recipe_id', db.Integer, db.ForeignKey('recipe.id')),
     db.Column('ingredients_id', db.Integer, db.ForeignKey('ingredients.id')),
@@ -65,9 +63,9 @@ def index():
     # # recipe = Recipe.query.filter_by(name='Test Recipe 2').first()
     # # recipe_name = recipe.id
     # db.create_all()
-    # recipe1 = Recipe(name="Test")
-    # db.session.add(recipe1)
-    # db.session.commit()
+    recipe1 = Recipe(name="Test")
+    db.session.add(recipe1)
+    db.session.commit()
     
     return render_template('index.html')
 
