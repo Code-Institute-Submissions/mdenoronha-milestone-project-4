@@ -1,5 +1,6 @@
 from flask import Flask, render_template, redirect, request, url_for
 from flask_sqlalchemy import SQLAlchemy
+import psycopg2
 import os
 
 app = Flask(__name__)
@@ -60,12 +61,12 @@ class Ingredients(db.Model):
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 def index():
-    # recipe = Recipe.query.filter_by(name='Test Recipe 2').first()
-    # recipe_name = recipe.id
-    db.create_all()
-    recipe1 = Recipe(name="Test")
-    db.session.add(recipe1)
-    db.session.commit()
+    # # recipe = Recipe.query.filter_by(name='Test Recipe 2').first()
+    # # recipe_name = recipe.id
+    # db.create_all()
+    # recipe1 = Recipe(name="Test")
+    # db.session.add(recipe1)
+    # db.session.commit()
     
     return render_template('index.html')
 
