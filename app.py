@@ -62,7 +62,7 @@ class Ingredients(db.Model):
 def index():
     # # recipe = Recipe.query.filter_by(name='Test Recipe 2').first()
     # # recipe_name = recipe.id
-    # db.create_all()
+    db.create_all()
     recipe1 = Recipe(name="Test")
     db.session.add(recipe1)
     db.session.commit()
