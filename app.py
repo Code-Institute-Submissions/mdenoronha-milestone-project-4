@@ -67,7 +67,7 @@ def index():
     # # recipe = Recipe.query.filter_by(name='Test Recipe 2').first()
     # # recipe_name = recipe.id
     db.create_all()
-    recipe1 = Recipe(name="Test")
+    recipe1 = Recipe(name="congue eget", serves="5", difficulty="easy", time="120",views="0", method="Morbi porttitor lorem id ligula. Suspendisse ornare consequat lectus. In est risus, auctor sed, tristique in, tempus sit amet, sem. Fusce consequat. Nulla nisl. Nunc nisl. Duis bibendum, felis sed interdum venenatis, turpis enim blandit mi, in porttitor pede justo eu massa. Donec dapibus. Duis at velit eu est congue elementum. In hac habitasse platea dictumst. Morbi vestibulum, velit id pretium iaculis, diam erat fermentum justo, nec condimentum neque sapien placerat ante. Nulla justo. Aliquam quis turpis eget elit sodales scelerisque. Mauris sit amet eros. Suspendisse accumsan tortor quis turpis.")
     db.session.add(recipe1)
     db.session.commit()
     
