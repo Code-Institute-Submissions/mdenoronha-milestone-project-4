@@ -17,17 +17,21 @@ recipe_ingredients = db.Table('recipe_ingredients',
 class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
-    # serves = db.Column(db.Integer, unique=True, nullable=False)
-    # difficulty = db.Column(db.String(6), unique=True, nullable=False)
-    # time = db.Column(db.Integer, unique=True, nullable=False)
-    # upvotes = db.Column(db.Integer, unique=True, nullable=False)
-    # method = db.Column(db.Text, unique=True, nullable=False)
+    serves = db.Column(db.Integer, unique=True, nullable=False)
+    difficulty = db.Column(db.String(6), unique=True, nullable=False)
+    time = db.Column(db.Integer, unique=True, nullable=False)
+    views = db.Column(db.Integer, unique=True, nullable=False)
+    # add 0 as standard for below
+    method = db.Column(db.Text, unique=True, nullable=False)
     # user = db.relationship('Recipe', backref="author", lazy=True)
     ingredients = db.relationship('Ingredients', secondary=recipe_ingredients, lazy='subquery',
         backref=db.backref('ingredients', lazy=True))
     measurments = db.relationship('Measurements', secondary=recipe_ingredients, lazy='subquery',
         backref=db.backref('measurments', lazy=True))
-    
+
+
+# recipe1 = Recipe(name="congue eget", serves="5", difficulty="easy", time="120",views="0", method="Morbi porttitor lorem id ligula. Suspendisse ornare consequat lectus. In est risus, auctor sed, tristique in, tempus sit amet, sem. Fusce consequat. Nulla nisl. Nunc nisl. Duis bibendum, felis sed interdum venenatis, turpis enim blandit mi, in porttitor pede justo eu massa. Donec dapibus. Duis at velit eu est congue elementum. In hac habitasse platea dictumst. Morbi vestibulum, velit id pretium iaculis, diam erat fermentum justo, nec condimentum neque sapien placerat ante. Nulla justo. Aliquam quis turpis eget elit sodales scelerisque. Mauris sit amet eros. Suspendisse accumsan tortor quis turpis.")
+
     def __repr__(self):
         return '<Recipe %r>' % self.name
         
