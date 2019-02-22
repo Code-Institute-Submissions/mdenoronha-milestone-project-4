@@ -17,10 +17,10 @@ recipe_ingredients = db.Table('recipe_ingredients',
 class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
-    serves = db.Column(db.Integer, unique=True, nullable=False)
-    difficulty = db.Column(db.String(6), unique=True, nullable=False)
-    time = db.Column(db.Integer, unique=True, nullable=False)
-    views = db.Column(db.Integer, unique=True, nullable=False)
+    serves = db.Column(db.Integer, nullable=False)
+    difficulty = db.Column(db.String(6), nullable=False)
+    time = db.Column(db.Integer, nullable=False)
+    views = db.Column(db.Integer, nullable=False, default='0')
     # add 0 as standard for below
     method = db.Column(db.Text, unique=True, nullable=False)
     # user = db.relationship('Recipe', backref="author", lazy=True)
@@ -67,7 +67,7 @@ db.create_all()
 def index():
     # # recipe = Recipe.query.filter_by(name='Test Recipe 2').first()
     # # recipe_name = recipe.id
-    recipe1 = Recipe(name="congue eget", serves="5", difficulty="easy", time="120",views="0", method="Morbi porttitor lorem id ligula. Suspendisse ornare consequat lectus. In est risus, auctor sed, tristique in, tempus sit amet, sem. Fusce consequat. Nulla nisl. Nunc nisl. Duis bibendum, felis sed interdum venenatis, turpis enim blandit mi, in porttitor pede justo eu massa. Donec dapibus. Duis at velit eu est congue elementum. In hac habitasse platea dictumst. Morbi vestibulum, velit id pretium iaculis, diam erat fermentum justo, nec condimentum neque sapien placerat ante. Nulla justo. Aliquam quis turpis eget elit sodales scelerisque. Mauris sit amet eros. Suspendisse accumsan tortor quis turpis.")
+    recipe1 = Recipe(name="conffgue eget", serves="4", difficulty="medium", time="110",views="2", method="Morbi porttitor lorem id. Suspendisse ornare consequat lectus. In est risus, auctor sed, tristique in, tempus sit amet, sem. Fusce consequat. Nulla nisl. Nunc nisl. Duis bibendum, felis sed interdum venenatis, turpis enim blandit mi, in porttitor pede justo eu massa. Donec dapibus. Duis at velit eu est congue elementum. In hac habitasse platea dictumst. Morbi vestibulum, velit id pretium iaculis, diam erat fermentum justo, nec condimentum neque sapien placerat ante. Nulla justo. Aliquam quis turpis eget elit sodales scelerisque. Mauris sit amet eros. Suspendisse accumsan tortor quis turpis.")
     db.session.add(recipe1)
     db.session.commit()
      
