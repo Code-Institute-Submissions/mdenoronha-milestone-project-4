@@ -32,6 +32,8 @@ class Recipe(db.Model):
     def __repr__(self):
         return '<Recipe %r>' % self.name
         
+
+        
 class Measurements(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     unit = db.Column(db.String(80), nullable=False)
@@ -65,11 +67,10 @@ db.create_all()
 def index():
     # # recipe = Recipe.query.filter_by(name='Test Recipe 2').first()
     # # recipe_name = recipe.id
-    recipe1 = Recipe(name="congue eget")
-    # recipe1 = Recipe(name="congue eget", serves="5", difficulty="easy", time="120",views="0", method="Morbi porttitor lorem id ligula. Suspendisse ornare consequat lectus. In est risus, auctor sed, tristique in, tempus sit amet, sem. Fusce consequat. Nulla nisl. Nunc nisl. Duis bibendum, felis sed interdum venenatis, turpis enim blandit mi, in porttitor pede justo eu massa. Donec dapibus. Duis at velit eu est congue elementum. In hac habitasse platea dictumst. Morbi vestibulum, velit id pretium iaculis, diam erat fermentum justo, nec condimentum neque sapien placerat ante. Nulla justo. Aliquam quis turpis eget elit sodales scelerisque. Mauris sit amet eros. Suspendisse accumsan tortor quis turpis.")
+    recipe1 = Recipe(name="congue eget", serves="5", difficulty="easy", time="120",views="0", method="Morbi porttitor lorem id ligula. Suspendisse ornare consequat lectus. In est risus, auctor sed, tristique in, tempus sit amet, sem. Fusce consequat. Nulla nisl. Nunc nisl. Duis bibendum, felis sed interdum venenatis, turpis enim blandit mi, in porttitor pede justo eu massa. Donec dapibus. Duis at velit eu est congue elementum. In hac habitasse platea dictumst. Morbi vestibulum, velit id pretium iaculis, diam erat fermentum justo, nec condimentum neque sapien placerat ante. Nulla justo. Aliquam quis turpis eget elit sodales scelerisque. Mauris sit amet eros. Suspendisse accumsan tortor quis turpis.")
     db.session.add(recipe1)
     db.session.commit()
-    
+     
     return render_template('index.html')
 
 if __name__ == '__main__':
