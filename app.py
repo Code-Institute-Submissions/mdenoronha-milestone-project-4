@@ -11,7 +11,7 @@ db = SQLAlchemy(app)
 recipe_ingredients = db.Table('recipe_ingredients',
     db.Column('recipe_id', db.Integer, db.ForeignKey('recipe.id')),
     db.Column('ingredients_id', db.Integer, db.ForeignKey('ingredients.id')),
-    db.Column('measurements_id', db.Integer, db.ForeignKey('measurements.id'), primary_key=True)
+    db.Column('measurements_id', db.Integer, db.ForeignKey('measurements.id'))
 )
 
 class Recipe(db.Model):
@@ -21,19 +21,17 @@ class Recipe(db.Model):
     difficulty = db.Column(db.String(6), nullable=False)
     time = db.Column(db.Integer, nullable=False)
     views = db.Column(db.Integer, nullable=False, default='0')
-    # add 0 as standard for below
-    method = db.Column(db.Text, unique=True, nullable=False)
-    # user = db.relationship('Recipe', backref="author", lazy=True)
+    method = db.Column(db.Text, nullable=False)
     ingredients = db.relationship('Ingredients', secondary=recipe_ingredients, lazy='subquery',
         backref=db.backref('ingredients', lazy=True))
-    measurments = db.relationship('Measurements', secondary=recipe_ingredients, lazy='subquery',
-        backref=db.backref('measurments', lazy=True))
+    measurements = db.relationship('Measurements', secondary=recipe_ingredients, lazy='subquery',
+        backref=db.backref('measurements', lazy=True))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
+        nullable=False)    
 
     def __repr__(self):
-        return '<Recipe %r>' % self.name
-        
-
-        
+        return '<Recipe %r>' % (self.id)
+            
 class Measurements(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     unit = db.Column(db.String(80), nullable=False)
@@ -52,26 +50,31 @@ class Ingredients(db.Model):
     def __repr__(self):
         return '<Ingredients %r>' % self.name
         
-# class User(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     username = db.Column(db.String(80), unique=True, nullable=False)
-#     email = db.Column(db.String(120), unique=True, nullable=False)
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    recipe = db.relationship('Recipe', backref="author", lazy=True)
 
-#     def __repr__(self):
-#         return '<User %r>' % self.username
+    def __repr__(self):
+        return '<User %r>' % self.username
 
-db.create_all()
+# # Notes
+# db.create_all()
+# recipe2 = Recipe(name="conffgue", serves="5", difficulty="hard", time="100",views="2", method="Donec diam neque, vestibulum eget, vulputate ut, ultrices vel, augue. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec pharetra, magna vestibulum aliquet ultrices, erat tortor sollicitudin mi, sit amet lobortis sapien sapien non mi. Integer ac neque. Duis bibendum. Morbi non quam nec dui luctus rutrum. Nulla tellus.")
+
+# db.session.add(recipe2)
+# db.session.commit()
+
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 def index():
-    # # recipe = Recipe.query.filter_by(name='Test Recipe 2').first()
-    # # recipe_name = recipe.id
-    recipe1 = Recipe(name="conffgue eget", serves="4", difficulty="medium", time="110",views="2", method="Morbi porttitor lorem id. Suspendisse ornare consequat lectus. In est risus, auctor sed, tristique in, tempus sit amet, sem. Fusce consequat. Nulla nisl. Nunc nisl. Duis bibendum, felis sed interdum venenatis, turpis enim blandit mi, in porttitor pede justo eu massa. Donec dapibus. Duis at velit eu est congue elementum. In hac habitasse platea dictumst. Morbi vestibulum, velit id pretium iaculis, diam erat fermentum justo, nec condimentum neque sapien placerat ante. Nulla justo. Aliquam quis turpis eget elit sodales scelerisque. Mauris sit amet eros. Suspendisse accumsan tortor quis turpis.")
-    db.session.add(recipe1)
-    db.session.commit()
+    
+    recipe_text = Recipe.query.all()
+
      
-    return render_template('index.html')
+    return render_template('index.html', recipe_text=recipe_text)
 
 if __name__ == '__main__':
     app.run(host=os.environ.get('IP'),
