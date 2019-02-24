@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 import os
 from io import BytesIO
 from base64 import b64encode
+import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///recipeapp.db')
@@ -76,7 +77,20 @@ class Filecontents(db.Model):
     
 @app.route('/')
 def index():
-    return render_template('index.html')
+    
+    recipe_names = Recipe.query.all()
+    recipe_dict = {}
+    for recipe in recipe_names:
+        recipe_dict.update({recipe.name:None})
+    # https://stackoverflow.com/questions/19884900/how-to-pass-dictionary-from-jinja2-using-python-to-javascript
+    recipe_object = (json.dumps(recipe_dict)
+    .replace(u'<', u'\\u003c')
+    .replace(u'>', u'\\u003e')
+    .replace(u'&', u'\\u0026')
+    .replace(u"'", u'\\u0027'))
+
+    
+    return render_template('index.html',recipe_object=recipe_object)
     
 @app.route('/upload', methods=['POST'])
 def upload():
