@@ -79,8 +79,10 @@ class Filecontents(db.Model):
 def index():
     return render_template('index.html')
     
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/upload', methods=['POST'])
 def upload():
+    
+    db.create_all()
     
     file = request.files['inputFile']
     newFile = Filecontents(name=file.filename, data=file.read())
