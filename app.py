@@ -81,6 +81,9 @@ def index():
     
 @app.route('/upload', methods=["POST"])
 def upload():
+    
+    db.create_all()
+    
     file = request.files['inputFile']
     newFile = Filecontents(name=file.filename, data=file.read())
     db.session.add(newFile)
