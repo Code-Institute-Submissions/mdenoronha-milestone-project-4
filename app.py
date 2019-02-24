@@ -53,7 +53,6 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
-# # Notes
 # db.create_all()
 # recipe2 = Recipe(name="conffgue", serves="5", difficulty="hard", time="100",views="2", method="Donec diam neque, vestibulum eget, vulputate ut, ultrices vel, augue. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec pharetra, magna vestibulum aliquet ultrices, erat tortor sollicitudin mi, sit amet lobortis sapien sapien non mi. Integer ac neque. Duis bibendum. Morbi non quam nec dui luctus rutrum. Nulla tellus.")
 # db.session.add(recipe2)
@@ -94,10 +93,19 @@ def upload():
 @app.route('/download')
 def download():
     # Help on retrieving and serving image from https://stackoverflow.com/questions/31358578/display-image-stored-as-binary-blob-in-template
-    file_data = Filecontents.query.filter_by(id=1).first()
+    file_data = Filecontents.query.filter_by(id=2).first()
     image = b64encode(file_data.data)
     return render_template('image-serve-test.html', file_data=file_data, image=image)
     
+    
+@app.route('/search', methods=['POST', 'GET'])
+def search():
+    
+    search_term = request.form["search"] 
+    result = Recipe.query.filter(Recipe.name.contains(search_term))
+    
+    
+    return render_template('search.html', result=result)
 
 if __name__ == '__main__':
     app.run(host=os.environ.get('IP'),
