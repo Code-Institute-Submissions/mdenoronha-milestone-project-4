@@ -94,7 +94,7 @@ def download():
     # Help on retrieving and serving image from https://stackoverflow.com/questions/31358578/display-image-stored-as-binary-blob-in-template
     file_data = Filecontents.query.filter_by(id=1).first()
     image = b64encode(file_data.data)
-    return render_template('index.html', file_data=file_data, image=image)
+    return render_template('image-serve-test.html', file_data=file_data, image=image)
     
 
 if __name__ == '__main__':
