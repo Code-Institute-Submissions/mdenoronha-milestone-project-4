@@ -1,26 +1,14 @@
-from flask import Flask, render_template, redirect, request, url_for, send_from_directory
+from flask import Flask, render_template, redirect, request, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
 import os
-from werkzeug.utils import secure_filename
-from os.path import join, dirname, realpath
-
-# Assistance in file path from https://stackoverflow.com/questions/37901716/flask-uploads-ioerror-errno-2-no-such-file-or-directory
-UPLOAD_FOLDER = join(dirname(realpath(__file__)), 'assets/recipe-images/..')
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+from io import BytesIO
+from base64 import b64encode
 
 app = Flask(__name__)
-# Assistance in file path from https://stackoverflow.com/questions/37901716/flask-uploads-ioerror-errno-2-no-such-file-or-directory
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///recipeapp.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'dsaf0897sfdg45sfdgfdsaqzdf98sdf0a'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
-
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 recipe_ingredients = db.Table('recipe_ingredients',
     db.Column('recipe_id', db.Integer, db.ForeignKey('recipe.id')),
@@ -35,6 +23,7 @@ class Recipe(db.Model):
     time = db.Column(db.Integer, nullable=False)
     views = db.Column(db.Integer, nullable=False, default='0')
     method = db.Column(db.Text, nullable=False)
+    # image_file = db.Column(db.Text)
     ingredients = db.relationship('Ingredients', secondary=recipe_ingredients, lazy='subquery',
         backref=db.backref('ingredients', lazy=True))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
@@ -67,53 +56,45 @@ class User(db.Model):
 # # Notes
 # db.create_all()
 # recipe2 = Recipe(name="conffgue", serves="5", difficulty="hard", time="100",views="2", method="Donec diam neque, vestibulum eget, vulputate ut, ultrices vel, augue. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec pharetra, magna vestibulum aliquet ultrices, erat tortor sollicitudin mi, sit amet lobortis sapien sapien non mi. Integer ac neque. Duis bibendum. Morbi non quam nec dui luctus rutrum. Nulla tellus.")
-
 # db.session.add(recipe2)
 # db.session.commit()
 
 
-@app.route('/', methods=['GET', 'POST'])
-@app.route('/index', methods=['GET', 'POST'])
-def index():
+# @app.route('/', methods=['GET', 'POST'])
+# @app.route('/index', methods=['GET', 'POST'])
+# def index():
     
-    recipe_text = Recipe.query.all()
+#     recipe_text = Recipe.query.all()
 
      
-    return render_template('index.html')
+#     return render_template('index.html', recipe_text=recipe_text)
 
-# http://flask.pocoo.org/docs/0.12/patterns/fileuploads/
-@app.route('/upload', methods=['GET', 'POST'])
-def upload_file():
-    if request.method == 'POST':
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        # if user does not select file, browser also
-        # submit a empty part without filename
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('uploaded_file',
-                                    filename=filename))
-    return '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form method=post enctype=multipart/form-data>
-      <p><input type=file name=file>
-         <input type=submit value=Upload>
-    </form>
-    '''
+# https://www.youtube.com/watch?v=TLgVEBuQURA
+class Filecontents(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(300))
+    data = db.Column(db.LargeBinary)
     
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'],
-                               filename)
+@app.route('/')
+def index():
+    return render_template('index.html')
+    
+@app.route('/upload', methods=["POST"])
+def upload():
+    file = request.files['inputFile']
+    newFile = Filecontents(name=file.filename, data=file.read())
+    db.session.add(newFile)
+    db.session.commit()
+    
+    return "saved file to database"
+    
+@app.route('/download')
+def download():
+    # Help on retrieving and serving image from https://stackoverflow.com/questions/31358578/display-image-stored-as-binary-blob-in-template
+    file_data = Filecontents.query.filter_by(id=1).first()
+    image = b64encode(file_data.data)
+    return render_template('index.html', file_data=file_data, image=image)
+    
 
 if __name__ == '__main__':
     app.run(host=os.environ.get('IP'),

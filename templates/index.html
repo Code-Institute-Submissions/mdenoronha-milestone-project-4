@@ -1,2 +1,11 @@
+<!doctype html>
+<title>Upload new File</title>
+<h1>Upload new File</h1>
+<form method="POST" action="/upload" enctype="multipart/form-data">
+    <p><input type=file name=inputFile>
+        <input type=submit value=Upload>
+</form>
 
-<p>Hello</p>
+<p>{{ file_data.x }}<br/>
+{{ file_data.y }}</p>
+<img src="data:;base64,{{ image }}"/>
