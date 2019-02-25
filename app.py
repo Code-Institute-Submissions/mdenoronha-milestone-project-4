@@ -16,10 +16,6 @@ app.config['SECRET_KEY'] = 'dsaf0897sfdg45sfdgfdsaqzdf98sdf0a'
 # AWS
 app.config['FLASKS3_BUCKET_NAME'] = "recipe-db"
 
-# # Use as env variables
-# S3_KEY = "AKIAJKKDQPYOE2GD5PXA"
-# S3_SECRET = "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"
-
 s3 = FlaskS3(app)
 db = SQLAlchemy(app)
 
