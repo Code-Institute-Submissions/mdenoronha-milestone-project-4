@@ -1,15 +1,39 @@
 from flask import Flask, render_template, redirect, request, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
 import os
-from io import BytesIO
-from base64 import b64encode
 import json
+from flask_s3 import FlaskS3
+import flask_s3
+import boto3
+import random
+import string
 
 app = Flask(__name__)
+# SQL-Alchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///recipeapp.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'dsaf0897sfdg45sfdgfdsaqzdf98sdf0a'
+# AWS
+app.config['FLASKS3_BUCKET_NAME'] = "recipe-db"
+app.config['AWS_ACCESS_KEY_ID'] = "AKIAJKKDQPYOE2GD5PXA"
+app.config['AWS_SECRET_ACCESS_KEY'] = "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"
+
+# # Use as env variables
+# S3_KEY = "AKIAJKKDQPYOE2GD5PXA"
+# S3_SECRET = "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"
+
+s3 = FlaskS3(app)
 db = SQLAlchemy(app)
+
+# Assistance for function provided by CI tutor
+def save_profile_picture(form_picture):          
+    random_hex = ''.join([random.choice(string.digits) for n in range(8)])    
+    _, f_ext = os.path.splitext(form_picture.filename)  
+    picture_fn = random_hex + f_ext
+    s3 = boto3.resource('s3')
+    s3.Bucket('recipe-db').put_object(Key="static/recipe_images/" + picture_fn, Body=form_picture)
+    
+    return picture_fn 
 
 recipe_ingredients = db.Table('recipe_ingredients',
     db.Column('recipe_id', db.Integer, db.ForeignKey('recipe.id')),
@@ -54,20 +78,7 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
-# db.create_all()
-# recipe2 = Recipe(name="conffgue", serves="5", difficulty="hard", time="100",views="2", method="Donec diam neque, vestibulum eget, vulputate ut, ultrices vel, augue. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec pharetra, magna vestibulum aliquet ultrices, erat tortor sollicitudin mi, sit amet lobortis sapien sapien non mi. Integer ac neque. Duis bibendum. Morbi non quam nec dui luctus rutrum. Nulla tellus.")
-# db.session.add(recipe2)
-# db.session.commit()
 
-
-# @app.route('/', methods=['GET', 'POST'])
-# @app.route('/index', methods=['GET', 'POST'])
-# def index():
-    
-#     recipe_text = Recipe.query.all()
-
-     
-#     return render_template('index.html', recipe_text=recipe_text)
 
 # https://www.youtube.com/watch?v=TLgVEBuQURA
 class Filecontents(db.Model):
@@ -92,24 +103,30 @@ def index():
     
     return render_template('index.html',recipe_object=recipe_object)
     
-@app.route('/upload', methods=['POST'])
+@app.route('/upload', methods=['POST', 'GET'])
 def upload():
     
-    db.create_all()
+    if request.method == 'POST':
+        
+        form_picture = request.files['inputFile']
+        save_profile_picture(form_picture)
     
-    file = request.files['inputFile']
-    newFile = Filecontents(name=file.filename, data=file.read())
-    db.session.add(newFile)
-    db.session.commit()
     
-    return "saved file to database"
+    
+    # db.create_all()
+    
+    # file = request.files['inputFile']
+    # newFile = Filecontents(name=file.filename, data=file.read())
+    # db.session.add(newFile)
+    # db.session.commit()
+    
+    return render_template('upload.html')
     
 @app.route('/download')
 def download():
-    # Help on retrieving and serving image from https://stackoverflow.com/questions/31358578/display-image-stored-as-binary-blob-in-template
-    file_data = Filecontents.query.filter_by(id=2).first()
-    image = b64encode(file_data.data)
-    return render_template('image-serve-test.html', file_data=file_data, image=image)
+
+
+    return render_template('image-serve-test.html')
     
     
 @app.route('/search', methods=['POST', 'GET'])

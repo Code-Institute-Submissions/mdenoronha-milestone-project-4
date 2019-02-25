@@ -1,0 +1,8 @@
+.background-image {
+    background-image: url("../imgs/background-imadge.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 100vh;
+}
+
+/*Remove 100vh height for mobile*/

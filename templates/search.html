@@ -1,5 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
 
 {% for res in result %}
 <p>{{res.name}}</p>
 <p>{{res.method}}</p>
 {% endfor %}
+
+{% endblock %}
