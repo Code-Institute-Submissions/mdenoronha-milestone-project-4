@@ -42,7 +42,7 @@ class Recipe(db.Model):
     time = db.Column(db.Integer, nullable=False)
     views = db.Column(db.Integer, nullable=False, default='0')
     method = db.Column(db.Text, nullable=False)
-    # image_file = db.Column(db.Text)
+    image_file = db.Column(db.Text, nullable=False)
     ingredients = db.relationship('Ingredients', secondary=recipe_ingredients, lazy='subquery',
         backref=db.backref('ingredients', lazy=True))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
@@ -97,13 +97,22 @@ def index():
     
     return render_template('index.html',recipe_object=recipe_object)
     
-@app.route('/upload', methods=['POST', 'GET'])
-def upload():
+@app.route('/add-recipe', methods=['POST', 'GET'])
+def add_recipe():
     
     if request.method == 'POST':
         
-        form_picture = request.files['inputFile']
-        save_profile_picture(form_picture)
+        name = request.form['dish_name']
+        serves = request.form['serves']
+        difficulty = request.form['difficulty']
+        time = request.form['time']
+        method = request.form['method']
+        recipe_picture = request.files['inputFile']
+        image_file_url = save_profile_picture(recipe_picture)
+        
+        temp_recipe = Recipe(name=name,image_file=image_file_url,serves = serves,difficulty=difficulty,time=time,views = 0,method = method,user_id = 1)
+        db.session.add(temp_recipe)
+        db.session.commit()
     
     
     

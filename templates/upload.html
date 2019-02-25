@@ -1,12 +1,64 @@
-{% extends 'base.html' %}
-{% block content %}
+{% extends 'base.html' %} {% block content %}
 
 <h1>Upload a file</h1>
+
+
 <form method="POST" enctype="multipart/form-data">
-    <p><input type=file name=inputFile>
-        <input type=submit value=Upload>
+    <p>
+        <div class="input-field col s6">
+            <!--Recipe Name-->
+            <div>
+                <input placeholder="Chicken Carbonara" name="dish_name" id="name" type="text" class="validate">
+                <label for="name">Dish Name</label>
+            </div>
+            Serves
+            <div>
+                <select name="serves">
+              <option value="" disabled selected>Choose your option</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="3">4</option>
+            </select>
+                <label>Serves</label>
+            </div>
+            <!--Difficulty-->
+            <div>
+                <select name="difficulty">
+              <option value="" disabled selected>Choose your option</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+                <label>Difficulty</label>
+            </div>
+            <!--Time-->
+            <div>
+                <select name="time">
+              <option value="" disabled selected>Choose your option</option>
+              <option value="10">10 min</option>
+              <option value="20">20 min</option>
+              <option value="30">30 min</option>
+              <option value="40">40 min</option>
+            </select>
+                <label>Time</label>
+            </div>
+            <!--Method-->
+            <div>
+                <textarea name="method" id="method-input" class="materialize-textarea"></textarea>
+                <label for="method-input">Method</label>
+                <input type=file name=inputFile>
+                
+            </div>
+        </div>
+       <button>Submit</button>
 </form>
+<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
 
-
+<script>
+    $(document).ready(function() {
+        $('select').formSelect();
+    });
+</script>
 
 {% endblock %}
