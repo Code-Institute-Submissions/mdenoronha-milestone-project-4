@@ -15,8 +15,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'dsaf0897sfdg45sfdgfdsaqzdf98sdf0a'
 # AWS
 app.config['FLASKS3_BUCKET_NAME'] = "recipe-db"
-app.config['AWS_ACCESS_KEY_ID'] = "AKIAJKKDQPYOE2GD5PXA"
-app.config['AWS_SECRET_ACCESS_KEY'] = "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"
+for key in ('AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_S3_BUCKET_URL'):
+    app.config[key] = os.environ[key]
 
 # # Use as env variables
 # S3_KEY = "AKIAJKKDQPYOE2GD5PXA"
