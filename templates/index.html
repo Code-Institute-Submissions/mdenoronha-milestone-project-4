@@ -3,32 +3,83 @@
 
 <div class="background-image">
     <div class="row">
-        <div class="col s12">
-            <div class="row">
-                <div class="input-field col s12">
-                    <form method="POST" action="/search" enctype="multipart/form-data" autocomplete="off">
-                        <input type="text" name=search id="autocomplete" class="autocomplete">
-                        <input type=submit>
-                    </form>
-                </div>
-            </div>
+        <div class="input-field col s12">
+            <form method="POST" action="/search" enctype="multipart/form-data" autocomplete="off">
+                <input type="text" name=search id="autocomplete" class="autocomplete">
+                <input type=submit>
+            </form>
         </div>
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+<div>
+    <div class="row">
+        <div class="col s8">
 
-<script>
-    // Autocomplete functionality
+            <div class="recipe-container">
+                <h2>FEATURED</h2>
+                <!--Recipe Box-->
+                {% for recipe in featured_recipes %}
+                <div class="recipe-box med">
+                    <div class="recipe-heading">
+                        <h3>{{ recipe.name }}</h3>
+                        <i class="material-icons remove_red_eye"></i>
+                        <p>{{ recipe.views }}</p>
+                    </div>
+                    <div class="recipe-image-container">
+                        <img class="recipe-image med" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe.image_file}}" alt="{{recipe.name}}"></img>
+                    </div>
+                    <div class="recipe-box-details">
+                        <p>SERVES: {{recipe.serves}}</p>
+                        <p>DIFFICULTY: {{recipe.difficulty}}</p>
+                        <p>TIME: {{recipe.time}} Mins</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col s4">
+            <div class="recipe-container">
+                <h2><span class="green-text">VEGAN</span> FAVS</h2>
+                <!--Recipe Box-->
+                {% for recipe in vegan_recipes %}
+                <div class="recipe-box sml">
+                    <div class="recipe-heading">
+                        <h3>{{ recipe.name }}</h3>
+                        <i class="material-icons remove_red_eye"></i>
+                        <p>{{ recipe.views }}</p>
+                    </div>
+                    <div class="recipe-image-container">
+                        <img class="recipe-image sml" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe.image_file}}" alt="{{recipe.name}}"></img>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 
-    var recipe_object = JSON.parse("{{recipe_object}}".replace(/&#34;/g, '"'))
 
-    $(document).ready(function() {
-        $('input.autocomplete').autocomplete({
-            data: recipe_object,
-            limit: 7
+
+
+    <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+
+    <script>
+        // Autocomplete functionality
+
+        var recipe_object = JSON.parse("{{recipe_object}}".replace(/&#34;/g, '"'))
+
+        $(document).ready(function() {
+            $('input.autocomplete').autocomplete({
+                data: recipe_object,
+                limit: 7,
+                onAutocomplete: function(val) {
+          // Callback function when value is autcompleted.
+                    var value = $('input.autocomplete').val();
+                    var link = window.open('/recipe/' + val, "_self");
+                    
+                }
+            });
         });
-    });
-</script>
+    </script>
 
-{% endblock %}
+    {% endblock %}
