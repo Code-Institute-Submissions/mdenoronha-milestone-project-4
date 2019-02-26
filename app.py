@@ -1,5 +1,6 @@
 from flask import Flask, render_template, redirect, request, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import func
 import os
 import json
 from flask_s3 import FlaskS3
@@ -15,6 +16,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'dsaf0897sfdg45sfdgfdsaqzdf98sdf0a'
 # AWS
 app.config['FLASKS3_BUCKET_NAME'] = "recipe-db"
+app.config['FLASKS3_ACTIVE'] = False
 
 s3 = FlaskS3(app)
 db = SQLAlchemy(app)
@@ -71,31 +73,42 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User %r>' % self.username
-
-
-
-# https://www.youtube.com/watch?v=TLgVEBuQURA
-class Filecontents(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(300))
-    data = db.Column(db.LargeBinary)
     
 @app.route('/')
 def index():
-    
-    recipe_names = Recipe.query.all()
+    # Dealing with ResultProxy help https://kite.com/python/docs/sqlalchemy.engine.result.ResultProxy
+    # Average view count
+    total_views = db.engine.execute('SELECT SUM(views), COUNT(views) FROM Recipe WHERE views > 0;')
+    view_data = total_views.fetchone()
+    average_views = view_data[0] / view_data[1]
+
+    recipe_names = Recipe.query.filter(Recipe.views > average_views).all()
     recipe_dict = {}
     for recipe in recipe_names:
-        recipe_dict.update({recipe.name:None})
+        # recipe_dict.update({recipe.name:recipe.id})
+        recipe_dict.update({recipe.name:recipe.id})
     # https://stackoverflow.com/questions/19884900/how-to-pass-dictionary-from-jinja2-using-python-to-javascript
     recipe_object = (json.dumps(recipe_dict)
     .replace(u'<', u'\\u003c')
     .replace(u'>', u'\\u003e')
     .replace(u'&', u'\\u0026')
     .replace(u"'", u'\\u0027'))
-
     
-    return render_template('index.html',recipe_object=recipe_object)
+    # Altering the homepage 
+    featured_recipes_ids = [1,2,3]
+    vegan_recipes_ids = [4,5,6,7]
+    featured_recipes = []
+    vegan_recipes = []
+    
+    for recipe in featured_recipes_ids:
+        temp_recipe = Recipe.query.filter_by(id=recipe).first()
+        featured_recipes.append(temp_recipe)
+    for recipe in vegan_recipes_ids:
+        temp_recipe = Recipe.query.filter_by(id=recipe).first()
+        vegan_recipes.append(temp_recipe)
+        
+    
+    return render_template('index.html',recipe_object=recipe_object, featured_recipes=featured_recipes, vegan_recipes=vegan_recipes)
     
 @app.route('/add-recipe', methods=['POST', 'GET'])
 def add_recipe():
@@ -113,9 +126,6 @@ def add_recipe():
         temp_recipe = Recipe(name=name,image_file=image_file_url,serves = serves,difficulty=difficulty,time=time,views = 0,method = method,user_id = 1)
         db.session.add(temp_recipe)
         db.session.commit()
-    
-    
-    
     # db.create_all()
     
     # file = request.files['inputFile']
@@ -125,11 +135,12 @@ def add_recipe():
     
     return render_template('upload.html')
     
-@app.route('/download')
-def download():
-
-
-    return render_template('image-serve-test.html')
+@app.route('/recipe/<recipe_name>/<recipe_id>')
+def recipe(recipe_name, recipe_id):
+    
+    recipe_result = Recipe.query.filter_by(id=recipe_id).first()
+    
+    return render_template('recipe.html', recipe_result=recipe_result)
     
     
 @app.route('/search', methods=['POST', 'GET'])

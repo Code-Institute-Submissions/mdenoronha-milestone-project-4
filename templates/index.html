@@ -62,9 +62,23 @@
 
 
     <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
     <script>
         // Autocomplete functionality
+        var elem = $(".autocomplete")
+        var instance = M.Autocomplete.init(elem);
+
+        
+        $("body").on('DOMSubtreeModified', elem, function() {
+            if($('ul.autocomplete-content li').length >= 1) {
+                if($('ul.autocomplete-content p:first').attr("id") != "featured-heading") {
+                    $('.autocomplete-content').prepend('<p class="unselectable" id="featured-heading">POPULAR RECIPES</p>')
+                }
+                
+            }
+        });
+
 
         var recipe_object = JSON.parse("{{recipe_object}}".replace(/&#34;/g, '"'))
 
@@ -74,9 +88,9 @@
                 limit: 7,
                 onAutocomplete: function(val) {
           // Callback function when value is autcompleted.
-                    var value = $('input.autocomplete').val();
-                    var link = window.open('/recipe/' + val, "_self");
-                    
+                    var val2 = val.replace(/ /g, "-");
+                    window.open('/recipe/' + val2 + "/" + recipe_object[val], "_self");
+                
                 }
             });
         });

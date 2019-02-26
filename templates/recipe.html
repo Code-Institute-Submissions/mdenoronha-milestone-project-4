@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<img src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe_result.image_file}}" alt="{{recipe_result.name}}"></img>
+<p>{{recipe_result.name}}</p>
+<p>{{recipe_result.method}}</p>
+
+{% endblock %}
