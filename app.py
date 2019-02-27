@@ -206,18 +206,23 @@ def register():
 @app.route('/register_user', methods=['POST', 'GET'])
 def register_user():
     
-    first_name = request.form["first_name"] 
-    last_name = request.form["last_name"] 
-    username = request.form["username"]
-    password = request.form["password"] 
-    user = User(first_name=first_name,last_name=last_name, username=username,password = password)
-    db.session.add(user)
-    db.session.commit()
+    first_name = request.form["first_name"].lower()
+    last_name = request.form["last_name"].lower() 
+    username = request.form["username"].lower()
+    password = request.form["password"].lower()
     
-    session["username"] = username
-    
-    return render_template('index.html')
 
+    if User.query.filter_by(first_name=first_name).count() > 0:
+        return redirect(url_for('register'))
+    else:
+        user = User(first_name=first_name,last_name=last_name, username=username,password = password)
+        db.session.add(user)
+        db.session.commit()
+        session["username"] = username
+    
+        return redirect(url_for('index'))
+    return redirect(url_for('register'))
+    
 if __name__ == '__main__':
     app.run(host=os.environ.get('IP'),
             port=int(os.environ.get('PORT')),
