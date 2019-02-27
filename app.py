@@ -212,7 +212,7 @@ def register_user():
     password = request.form["password"].lower()
     
 
-    if User.query.filter_by(first_name=first_name).count() > 0:
+    if User.query.filter_by(username=username).count() > 0:
         return redirect(url_for('register'))
     else:
         user = User(first_name=first_name,last_name=last_name, username=username,password = password)
@@ -223,6 +223,30 @@ def register_user():
         return redirect(url_for('index'))
     return redirect(url_for('register'))
     
+@app.route('/login', methods=['POST', 'GET'])
+def login():
+    
+    return render_template('login.html')
+    
+@app.route('/login_user', methods=['POST', 'GET'])
+def login_user():
+    
+    username = request.form["username"].lower()
+    password = request.form["password"].lower()
+    
+    user = User.query.filter_by(username=username).first()
+    
+    try:
+        user.username
+    except AttributeError:
+        return redirect(url_for('login'))
+    
+    if user.password == password:
+        session["username"] = username
+        return redirect(url_for('index'))
+    else: 
+        return redirect(url_for('login'))
+
 if __name__ == '__main__':
     app.run(host=os.environ.get('IP'),
             port=int(os.environ.get('PORT')),
