@@ -1,0 +1,37 @@
+{% extends 'base.html' %} {% block content %}
+
+<div class="row">
+    <div class="input-field col s12">
+        <form method="POST" class="register-form" action="/register_user" enctype="multipart/form-data" autocomplete="off">
+            <div class="row">
+                <div class="input-field col s12">
+                    <input name="first_name" id="first_name" type="text" class="validate" required>
+                    <label for="first_name">First Name</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <input name="last_name" id="last_name" type="text" class="validate" required>
+                    <label for="last_name">Last Name</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <input name="username" id="username" type="text" class="validate" required>
+                    <label for="username">Username</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <input name="password" id="password" type="password" class="validate" required>
+                    <label for="password">Password</label>
+                </div>
+            </div>
+            <div class="row">
+                <button>Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

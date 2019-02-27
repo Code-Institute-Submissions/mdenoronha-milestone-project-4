@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, url_for, send_file
+from flask import Flask, render_template, redirect, request, url_for, send_file, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
 import os
@@ -45,7 +45,7 @@ class Recipe(db.Model):
     views = db.Column(db.Integer, nullable=False, default='0')
     method = db.Column(db.Text, nullable=False)
     image_file = db.Column(db.Text, nullable=False)
-    ingredients = db.relationship('Ingredients', secondary=recipe_ingredients, lazy='subquery',
+    ingredients = db.relationship('Ingredients', secondary=recipe_ingredients, lazy='dynamic',
         backref=db.backref('ingredients', lazy=True))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
         nullable=False)    
@@ -67,8 +67,10 @@ class Ingredients(db.Model):
         
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    first_name = db.Column(db.String(80), nullable=False)
+    last_name = db.Column(db.String(80), nullable=False)
+    username = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(120), nullable=False)
     recipe = db.relationship('Recipe', backref="author", lazy=True)
 
     def __repr__(self):
@@ -146,11 +148,75 @@ def recipe(recipe_name, recipe_id):
 @app.route('/search', methods=['POST', 'GET'])
 def search():
     
-    search_term = request.form["search"] 
-    result = Recipe.query.filter(Recipe.name.contains(search_term))
+    result = None
+    if request.method == "POST":
+        search_term = request.form["search"] 
+        recipe_type = request.form.getlist('recipe-type')
+
+        # test = Recipe.query.filter(~Recipe.ingredients.any(Ingredients.is_vegan == True))
+        # Check to see if returned recipes have nutritional requirements
+        if not recipe_type:
+            checkboxes = [None, None, None]
+            result = (Recipe.query
+            .filter(Recipe.name.contains(search_term))
+            .order_by(Recipe.views.desc()))
+        elif "vegan" in recipe_type and "gluten-free" in recipe_type:
+            checkboxes = ["vegan", "vegetarian", "gluten_free"]
+            result = (Recipe.query
+            .filter(Recipe.name.contains(search_term))
+            .filter(~Recipe.ingredients.any(Ingredients.is_vegan == False))
+            .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
+            .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
+            .order_by(Recipe.views.desc()))
+        elif "vegan" in recipe_type:
+            checkboxes = ["vegan", "vegetarian", None]
+            result = (Recipe.query
+            .filter(Recipe.name.contains(search_term))
+            .filter(~Recipe.ingredients.any(Ingredients.is_vegan == False))
+            .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
+            .order_by(Recipe.views.desc()))
+        elif "vegetarian" in recipe_type and "gluten-free" in recipe_type:
+            checkboxes = [None, "vegetarian", "gluten_free"]
+            result = (Recipe.query
+            .filter(Recipe.name.contains(search_term))
+            .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
+            .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
+            .order_by(Recipe.views.desc()))
+        elif "vegetarian" in recipe_type:
+            checkboxes = [None, "vegetarian", None]
+            result = (Recipe.query
+            .filter(Recipe.name.contains(search_term))
+            .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
+            .order_by(Recipe.views.desc()))
+        elif "gluten-free" in recipe_type:
+            checkboxes = [None, None, "gluten_free"]
+            result = (Recipe.query
+            .filter(Recipe.name.contains(search_term))
+            .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
+            .order_by(Recipe.views.desc()))
+
+    return render_template('search.html', result=result, checkboxes=checkboxes, search_term=search_term)
+    
+@app.route('/register', methods=['POST', 'GET'])
+def register():
     
     
-    return render_template('search.html', result=result)
+    return render_template('register.html')
+    
+@app.route('/register_user', methods=['POST', 'GET'])
+def register_user():
+    
+    first_name = request.form["first_name"] 
+    last_name = request.form["last_name"] 
+    username = request.form["username"]
+    password = request.form["password"] 
+    user = User(first_name=first_name,last_name=last_name, username=username,password = password)
+    db.session.add(user)
+    db.session.commit()
+    
+    session["username"] = username
+    
+    return render_template('index.html')
 
 if __name__ == '__main__':
     app.run(host=os.environ.get('IP'),

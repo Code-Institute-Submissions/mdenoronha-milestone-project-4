@@ -1,10 +1,66 @@
-{% extends 'base.html' %}
-{% block content %}
+{% extends 'base.html' %} {% block content %}
 
-{% for res in result %}
+
+
+<div class="row">
+    <div class="input-field col s12">
+        <form method="POST" class="search-bar" action="/search" enctype="multipart/form-data" autocomplete="off">
+            <input type="text" name="search">
+            
+            {% if search_term %}
+            <h4>Search: {{search_term}}</h4>
+            {% endif %}
+            
+            <label>
+                {% if checkboxes[1] == "vegetarian" %}
+                <input type="checkbox" name="recipe-type" value="vegetarian" class="filled-in vegetarian" checked/>
+                {% else %}
+                <input type="checkbox" name="recipe-type" value="vegetarian" class="filled-in vegetarian"/>
+                {% endif %}
+                <span>Vegetarian</span>
+              </label>
+            <label>
+                {% if checkboxes[0] == "vegan" %}
+                <input type="checkbox" name="recipe-type" value="vegan" class="filled-in vegan" checked />
+                {% else %}
+                <input type="checkbox" name="recipe-type" value="vegan" class="filled-in vegan" />
+                {% endif %}
+                <span>Vegan</span>
+            </label>
+            <label>
+                {% if checkboxes[2] == "gluten_free" %}
+                <input type="checkbox" name="recipe-type" value="gluten-free" class="filled-in gluten-free" checked/>
+                {% else %}
+                <input type="checkbox" name="recipe-type" value="gluten-free" class="filled-in gluten-free"/>
+                {% endif %}
+                <span>Gluten Free</span>
+            </label>
+            <button>Submit</button>
+        </form>
+    </div>
+</div>
+
+{% if result %} {% for res in result %}
 <img src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{res.image_file}}" alt="{{res.name}}"></img>
 <p>{{res.name}}</p>
+<p>{{res.views}}</p>
 <p>{{res.method}}</p>
-{% endfor %}
 
-{% endblock %}
+<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+
+<script>
+
+    $(".vegan").change(function() {
+        if(this.checked) {
+            $(".vegetarian").prop("checked", true)
+        }
+    })
+    
+    $(".vegetarian").change(function() {
+        if($(".vegan").is(':checked')) {
+            $(".vegan").prop("checked", false)
+        }
+    })
+</script>
+
+{% endfor %} {% endif %} {% endblock %}
