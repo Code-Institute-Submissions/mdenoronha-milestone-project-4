@@ -112,30 +112,125 @@ def index():
     
     return render_template('index.html',recipe_object=recipe_object, featured_recipes=featured_recipes, vegan_recipes=vegan_recipes)
     
-@app.route('/add-recipe', methods=['POST', 'GET'])
-def add_recipe():
+@app.route('/add-recipe/info', methods=['POST', 'GET'])
+def add_recipe_info():
     
     if request.method == 'POST':
         
-        name = request.form['dish_name']
-        serves = request.form['serves']
-        difficulty = request.form['difficulty']
-        time = request.form['time']
-        method = request.form['method']
+        # Add check to see if recipe name has been added before
+        
         recipe_picture = request.files['inputFile']
         image_file_url = save_profile_picture(recipe_picture)
         
-        temp_recipe = Recipe(name=name,image_file=image_file_url,serves = serves,difficulty=difficulty,time=time,views = 0,method = method,user_id = 1)
-        db.session.add(temp_recipe)
-        db.session.commit()
-    # db.create_all()
-    
-    # file = request.files['inputFile']
-    # newFile = Filecontents(name=file.filename, data=file.read())
-    # db.session.add(newFile)
-    # db.session.commit()
+        session["added_recipe"] = {
+            'name': request.form['dish_name'],
+            'serves': request.form['serves'],
+            'difficulty': request.form['difficulty'],
+            'time': request.form['time'],
+            'method': request.form['method'],
+            'image_file_url': image_file_url
+        }
+        
+        return redirect(url_for('add_recipe_ingredients'))
     
     return render_template('upload.html')
+    
+@app.route('/add-recipe/ingredients', methods=['POST', 'GET'])
+def add_recipe_ingredients():
+    # Why is this not working?    
+    try:
+        session["added_recipe"]
+    except KeyError:
+        redirect(url_for('add_recipe_info'))
+    
+    if request.method == "POST":
+        
+        session["added_recipe_ingredients"] = {}
+
+        for counter, (ingred, amount, unit) in enumerate(zip(request.form.getlist('ingredient'),
+                                          request.form.getlist('amount'),
+                                          request.form.getlist('unit'))):
+                
+                is_vegetarian = False
+                is_vegan = False
+                is_gluten_free = False
+                
+                if request.form.getlist('vegetarian-' + str(counter)):
+                    is_vegetarian = True
+
+                if request.form.getlist('vegan-' + str(counter)):
+                    is_vegan = True
+                
+                if request.form.getlist('gluten-free-' + str(counter)):
+                    is_gluten_free = True
+            
+                temp_ingred = {
+                    "ingred": ingred,
+                    "amount": amount,
+                    "unit": unit,
+                    "is_vegetarian" : is_vegetarian,
+                    "is_vegan" : is_vegan,
+                    "is_gluten_free" : is_gluten_free
+                }
+                session["added_recipe_ingredients"][counter] = temp_ingred
+    
+                
+
+        return redirect(url_for('add_recipe_submit'))
+    
+    # temp_recipe = Recipe(name=name,image_file=image_file_url,serves = serves,difficulty=difficulty,time=time,views = 0,method = method,user_id = 1)
+    # db.session.add(temp_recipe)
+    # db.session.commit()
+    
+    return render_template('upload_ingred.html')
+    
+@app.route('/add-recipe/submit', methods=['POST', 'GET'])
+def add_recipe_submit():
+    # Why is this not working?    
+    try:
+        session["added_recipe_ingredients"]
+    except KeyError:
+        redirect(url_for('add_recipe_info'))
+    
+    # user = User.query.filter_by(username=session["username"]).first()
+    added_recipe_ingredients = session["added_recipe_ingredients"]
+    added_recipe = session["added_recipe"]
+    # added_recipe_ingredients = session["added_recipe_ingredients"]
+    temp_recipe = Recipe(name=session["added_recipe"]["name"],
+                        image_file=session["added_recipe"]["image_file_url"],
+                        serves = session["added_recipe"]["serves"],
+                        difficulty=session["added_recipe"]["difficulty"],
+                        time=session["added_recipe"]["time"],
+                        views = 0,
+                        method = session["added_recipe"]["method"],
+                        user_id = user.id)
+                        
+    db.session.add(temp_recipe)
+    
+    for counter, (k, v) in enumerate(session["added_recipe_ingredients"].items()):
+        
+        # Add check to see if ingredient, unit, amount has been added before, if so skip adding it and append from db
+        
+        counter = Ingredients(name=v["ingred"],
+                              is_vegetarian = v["is_vegetarian"],
+                              is_vegan=v["is_vegan"],
+                              is_gluten_free=v["is_gluten_free"],
+                              unit=v["unit"],
+                              amount=v["amount"])
+        
+        db.session.add(counter)
+        temp_recipe.ingredients.append(counter)
+    
+    if request.method == "POST":
+        session.pop("added_recipe")
+        session.pop("added_recipe_ingredients")
+        db.session.commit()
+        
+        return redirect(url_for('index'))
+        
+    
+    
+    return render_template('upload_submit.html', added_recipe=added_recipe, added_recipe_ingredients=added_recipe_ingredients)
     
 @app.route('/recipe/<recipe_name>/<recipe_id>')
 def recipe(recipe_name, recipe_id):
@@ -218,6 +313,7 @@ def register_user():
         user = User(first_name=first_name,last_name=last_name, username=username,password = password)
         db.session.add(user)
         db.session.commit()
+        
         session["username"] = username
     
         return redirect(url_for('index'))

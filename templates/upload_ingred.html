@@ -1,0 +1,97 @@
+{% extends 'base.html' %} {% block content %}
+
+<h1>Upload a file</h1>
+
+
+<form method="POST" enctype="multipart/form-data">
+    <div class="row">
+        <div class="input-field col s4">
+            <div>
+                <input placeholder="Chicken" name="ingredient" id="ingredient" type="text" class="validate">
+                <label for="name">Ingredient</label>
+            </div>
+        </div>
+        <div class="input-field col s4">
+            <div>
+                <input placeholder="2" name="amount" id="amount" type="text" class="validate">
+                <label for="name">Amount</label>
+            </div>
+        </div>
+        <div class="input-field col s4">
+            <div>
+                <input placeholder="grams" name="unit" id="unit" type="text" class="validate">
+                <label for="name">Unit</label>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <label>
+            <input type="checkbox" name="vegetarian-0" value="vegetarian" class="filled-in vegetarian"/>
+            <span>Vegetarian</span>
+        </label>
+            <label>
+            <input type="checkbox" name="vegan-0" value="vegan" class="filled-in vegan" />
+        <span>Vegan</span>
+        </label>
+        <label>
+            <input type="checkbox" name="gluten-free-0" value="gluten-free" class="filled-in gluten-free" />
+            <span>Gluten Free</span>
+        </label>
+    </div>
+    <div class="row">
+        <div class="input-field col s4">
+            <div>
+                <input placeholder="Chicken" name="ingredient" id="ingredient" type="text" class="validate">
+                <label for="name">Ingredient</label>
+            </div>
+        </div>
+        <div class="input-field col s4">
+            <div>
+                <input placeholder="2" name="amount" id="amount" type="text" class="validate">
+                <label for="name">Amount</label>
+            </div>
+        </div>
+        <div class="input-field col s4">
+            <div>
+                <input placeholder="grams" name="unit" id="unit" type="text" class="validate">
+                <label for="name">Unit</label>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <label>
+            <input type="checkbox" name="vegetarian-1" value="vegetarian" class="filled-in vegetarian"/>
+            <span>Vegetarian</span>
+        </label>
+            <label>
+            <input type="checkbox" name="vegan-1" value="vegan" class="filled-in vegan" />
+        <span>Vegan</span>
+        </label>
+        <label>
+            <input type="checkbox" name="gluten-free-1" value="gluten-free" class="filled-in gluten-free" />
+            <span>Gluten Free</span>
+        </label>
+    </div>
+    <button>Submit</button>
+</form>
+<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+<script>
+    $(document).ready(function() {
+        $('select').formSelect();
+    });
+
+
+    $(".vegan").change(function() {
+        if (this.checked) {
+            $(".vegetarian").prop("checked", true)
+        }
+    })
+
+    $(".vegetarian").change(function() {
+        if ($(".vegan").is(':checked')) {
+            $(".vegan").prop("checked", false)
+        }
+    })
+</script>
+
+{% endblock %}
