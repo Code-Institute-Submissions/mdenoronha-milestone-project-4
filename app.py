@@ -105,6 +105,12 @@ recipe_ingredients = db.Table('recipe_ingredients',
     db.Column('ingredients_id', db.Integer, db.ForeignKey('ingredients.id')),
 )
 
+viewed_recipes = db.Table('viewed_recipes',
+    db.Column('recipe_id', db.Integer, db.ForeignKey('recipe.id')),
+    # Change to user_id when database is updated
+    db.Column('user_ud', db.Integer, db.ForeignKey('user.id')),
+)
+
 class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
@@ -142,6 +148,7 @@ class User(db.Model):
     username = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
     recipe = db.relationship('Recipe', backref="author", lazy=True)
+    viewed_recipe = db.relationship('Recipe', secondary=viewed_recipes, lazy='dynamic')
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -462,6 +469,22 @@ def recipe(recipe_name, recipe_id):
     
     recipe_result = Recipe.query.filter_by(id=recipe_id).first()
     
+    # Will need to change to try
+    if session["username"]:
+        
+        user = User.query.filter_by(username=session["username"]).first()
+        
+        # Change to user_id when database is updated
+        search_str = "SELECT * FROM viewed_recipes WHERE user_ud = %s AND recipe_id = %s ;" % (user.id, recipe_id)
+        viewed_recipe = db.engine.execute(search_str).fetchall()
+        
+        if not viewed_recipe:
+            user.viewed_recipe.append(recipe_result)
+            db.session.commit()
+
+    
+    recipe_result = Recipe.query.filter_by(id=recipe_id).first()
+    
     return render_template('recipe.html', recipe_result=recipe_result)
     
 @app.route('/search', methods=['POST', 'GET'])
@@ -509,7 +532,7 @@ def search():
     
 @app.route('/account/my-recipes', methods=['POST', 'GET'])
 def account_my_recipes():
-    session['username'] = "pbeckworth1"
+
     page = request.args.get('page', 1, type=int)
     
     user = User.query.filter_by(username=session['username']).first()
