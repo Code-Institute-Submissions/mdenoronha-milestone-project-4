@@ -464,7 +464,6 @@ def recipe(recipe_name, recipe_id):
     
     return render_template('recipe.html', recipe_result=recipe_result)
     
-    
 @app.route('/search', methods=['POST', 'GET'])
 def search():
     
@@ -507,6 +506,31 @@ def search():
     
     # checkboxes=checkboxes, make session
     return render_template('search.html', result=result, checkboxes=checkboxes, search_term=search_term, next_url=next_url, prev_url=prev_url, pagination_num=pagination_num, page=page)
+    
+@app.route('/account/my-recipes', methods=['POST', 'GET'])
+def account_my_recipes():
+    session['username'] = "pbeckworth1"
+    page = request.args.get('page', 1, type=int)
+    
+    user = User.query.filter_by(username=session['username']).first()
+    
+    result = (Recipe.query
+        .filter_by(user_id=user.id)
+        .order_by(Recipe.views.desc())
+        .paginate(page, 15, False))
+    total_pages = result.pages
+
+    total_pages = result.pages
+    pagination_num = create_pagination_num(total_pages, page)
+        # Assistance on pagination from https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-ix-pagination
+    next_url = url_for('search', page=result.next_num) \
+    if result.has_next else None
+    prev_url = url_for('search', page=result.prev_num) \
+    if result.has_prev else None
+    
+    print(type(result.items))
+    
+    return render_template('account_my_recipes.html', result=result, next_url=next_url, prev_url=prev_url, pagination_num=pagination_num, page=page)
     
 @app.route('/register', methods=['POST', 'GET'])
 def register():

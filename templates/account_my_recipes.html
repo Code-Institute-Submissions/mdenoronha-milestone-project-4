@@ -1,0 +1,53 @@
+{% extends 'base.html' %} {% block content %}
+
+
+{% if not result.items %}
+<p>No Recipes Added</p>
+{% else %}
+
+{% for res in result.items %}
+<img src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{res.image_file}}" alt="{{res.name}}"></img>
+<p>{{res.name}}</p>
+<p>{{res.views}}</p>
+<p>{{res.method}}</p>
+{% endfor %}
+
+
+<ul class="pagination">
+    {% if prev_url == None %}
+    <li class="disabled"><a href=""><i class="material-icons">chevron_left</i></a></li>
+    {% else %}
+    <li class="waves-effect"><a href="{{ prev_url }}"><i class="material-icons">chevron_left</i></a></li>
+    {% endif %}
+    {% for li in pagination_num %}
+    {% if li == page %}
+    <li class="active"><a href="?page={{li}}">{{li}}</a></li>
+    {% else %}
+    <li class="waves-effect"><a href="?page={{li}}">{{li}}</a></li>
+    {% endif %}
+    {% endfor %}
+    {% if next_url == None %}
+    <li class="disabled"><a href=""><i class="material-icons">chevron_right</i></a></li>
+    {% else %}
+    <li class="waves-effect"><a href="{{ next_url }}"><i class="material-icons">chevron_right</i></a></li>
+    {% endif %}
+</ul>
+
+{% endif %}
+
+<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+
+<script>
+    $(".vegan").change(function() {
+        if (this.checked) {
+            $(".vegetarian").prop("checked", true)
+        }
+    })
+
+    $(".vegetarian").change(function() {
+        if ($(".vegan").is(':checked')) {
+            $(".vegan").prop("checked", false)
+        }
+    })
+</script>
+{% endblock %}
