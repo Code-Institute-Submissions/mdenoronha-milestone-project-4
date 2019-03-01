@@ -27,11 +27,16 @@ def create_pagination_num(total_pages, page):
     for counter, p in enumerate(range(0,total_pages)):
         if len(pagination_num) > 5:
             break
-        if page > total_pages - 3:
-            pagination_num = [total_pages-5, total_pages-4, total_pages-3, total_pages-2, total_pages-1, total_pages]
+        if total_pages < 6 or page > total_pages - 3:
+            for counter, p in enumerate(range(0,5)):
+                if total_pages - counter > 0:
+    
+                    pagination_num.insert(0, total_pages - counter)
             break
+        # Added to ensure active number is in middle of pagination where possible
         else:
             if page + counter - 2 > 0 and page + counter - 2 < total_pages:
+                print(total_pages)
                 pagination_num.append(int(page + counter - 2))
                 
     return pagination_num
@@ -42,7 +47,7 @@ def return_search(recipe_type, search_term, page):
         result = (Recipe.query
         .filter(Recipe.name.contains(search_term))
         .order_by(Recipe.views.desc())
-        .paginate(page, 2, False))
+        .paginate(page, 15, False))
     elif "vegan" in recipe_type and "gluten-free" in recipe_type:
         checkboxes = ["vegan", "vegetarian", "gluten_free"]
         result = (Recipe.query
@@ -51,7 +56,7 @@ def return_search(recipe_type, search_term, page):
         .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
         .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
         .order_by(Recipe.views.desc())
-        .paginate(page, 2, False))
+        .paginate(page, 15, False))
     elif "vegan" in recipe_type:
         checkboxes = ["vegan", "vegetarian", None]
         result = (Recipe.query
@@ -59,7 +64,7 @@ def return_search(recipe_type, search_term, page):
         .filter(~Recipe.ingredients.any(Ingredients.is_vegan == False))
         .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
         .order_by(Recipe.views.desc())
-        .paginate(page, 2, False))
+        .paginate(page, 15, False))
     elif "vegetarian" in recipe_type and "gluten-free" in recipe_type:
         checkboxes = [None, "vegetarian", "gluten_free"]
         result = (Recipe.query
@@ -67,21 +72,21 @@ def return_search(recipe_type, search_term, page):
         .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
         .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
         .order_by(Recipe.views.desc())
-        .paginate(page, 2, False))
+        .paginate(page, 15, False))
     elif "vegetarian" in recipe_type:
         checkboxes = [None, "vegetarian", None]
         result = (Recipe.query
         .filter(Recipe.name.contains(search_term))
         .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
         .order_by(Recipe.views.desc())
-        .paginate(page, 2, False))
+        .paginate(page, 15, False))
     elif "gluten-free" in recipe_type:
         checkboxes = [None, None, "gluten_free"]
         result = (Recipe.query
         .filter(Recipe.name.contains(search_term))
         .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
         .order_by(Recipe.views.desc())
-        .paginate(page, 2, False))
+        .paginate(page, 15, False))
             
     return result
 
@@ -315,7 +320,6 @@ def search():
         search_term = session["search_term"]
         total_pages = result.pages
         pagination_num = create_pagination_num(total_pages, page)
-        print(pagination_num)
         # Assistance on pagination from https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-ix-pagination
         next_url = url_for('search', page=result.next_num) \
         if result.has_next else None
@@ -341,7 +345,6 @@ def search():
         
         total_pages = result.pages
         pagination_num = create_pagination_num(total_pages, page)
-        print(pagination_num)
 
         # test = Recipe.query.filter(~Recipe.ingredients.any(Ingredients.is_vegan == True))
         # Check to see if returned recipes have nutritional requirements
