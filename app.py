@@ -21,6 +21,70 @@ app.config['FLASKS3_ACTIVE'] = False
 s3 = FlaskS3(app)
 db = SQLAlchemy(app)
 
+def create_pagination_num(total_pages, page):
+    
+    pagination_num = []
+    for counter, p in enumerate(range(0,total_pages)):
+        if len(pagination_num) > 5:
+            break
+        if page > total_pages - 3:
+            pagination_num = [total_pages-5, total_pages-4, total_pages-3, total_pages-2, total_pages-1, total_pages]
+            break
+        else:
+            if page + counter - 2 > 0 and page + counter - 2 < total_pages:
+                pagination_num.append(int(page + counter - 2))
+                
+    return pagination_num
+
+def return_search(recipe_type, search_term, page):
+    if not recipe_type:
+        checkboxes = [None, None, None]
+        result = (Recipe.query
+        .filter(Recipe.name.contains(search_term))
+        .order_by(Recipe.views.desc())
+        .paginate(page, 2, False))
+    elif "vegan" in recipe_type and "gluten-free" in recipe_type:
+        checkboxes = ["vegan", "vegetarian", "gluten_free"]
+        result = (Recipe.query
+        .filter(Recipe.name.contains(search_term))
+        .filter(~Recipe.ingredients.any(Ingredients.is_vegan == False))
+        .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
+        .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
+        .order_by(Recipe.views.desc())
+        .paginate(page, 2, False))
+    elif "vegan" in recipe_type:
+        checkboxes = ["vegan", "vegetarian", None]
+        result = (Recipe.query
+        .filter(Recipe.name.contains(search_term))
+        .filter(~Recipe.ingredients.any(Ingredients.is_vegan == False))
+        .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
+        .order_by(Recipe.views.desc())
+        .paginate(page, 2, False))
+    elif "vegetarian" in recipe_type and "gluten-free" in recipe_type:
+        checkboxes = [None, "vegetarian", "gluten_free"]
+        result = (Recipe.query
+        .filter(Recipe.name.contains(search_term))
+        .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
+        .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
+        .order_by(Recipe.views.desc())
+        .paginate(page, 2, False))
+    elif "vegetarian" in recipe_type:
+        checkboxes = [None, "vegetarian", None]
+        result = (Recipe.query
+        .filter(Recipe.name.contains(search_term))
+        .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
+        .order_by(Recipe.views.desc())
+        .paginate(page, 2, False))
+    elif "gluten-free" in recipe_type:
+        checkboxes = [None, None, "gluten_free"]
+        result = (Recipe.query
+        .filter(Recipe.name.contains(search_term))
+        .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
+        .order_by(Recipe.views.desc())
+        .paginate(page, 2, False))
+            
+    return result
+
 # Assistance for function provided by CI tutor
 def save_profile_picture(form_picture):          
     random_hex = ''.join([random.choice(string.digits) for n in range(8)])    
@@ -137,6 +201,7 @@ def add_recipe_info():
     
 @app.route('/add-recipe/ingredients', methods=['POST', 'GET'])
 def add_recipe_ingredients():
+    
     # Why is this not working?    
     try:
         session["added_recipe"]
@@ -243,54 +308,47 @@ def recipe(recipe_name, recipe_id):
 @app.route('/search', methods=['POST', 'GET'])
 def search():
     
-    result = None
+    page = request.args.get('page', 1, type=int)
+    
+    if "search_term" in session:
+        result = return_search(session["recipe_type"], session["search_term"], page)
+        search_term = session["search_term"]
+        total_pages = result.pages
+        pagination_num = create_pagination_num(total_pages, page)
+        print(pagination_num)
+        # Assistance on pagination from https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-ix-pagination
+        next_url = url_for('search', page=result.next_num) \
+        if result.has_next else None
+        prev_url = url_for('search', page=result.prev_num) \
+        if result.has_prev else None
+    else:
+        result = None
+        search_term = None 
+    
+    checkboxes = [None, None, None]
+    
     if request.method == "POST":
         search_term = request.form["search"] 
+        session["search_term"] = search_term
         recipe_type = request.form.getlist('recipe-type')
+        session["recipe_type"] = recipe_type
+        
+        result = return_search(recipe_type, search_term, 1)
+        next_url = url_for('search', page=result.next_num) \
+        if result.has_next else None
+        prev_url = url_for('search', page=result.prev_num) \
+        if result.has_prev else None
+        
+        total_pages = result.pages
+        pagination_num = create_pagination_num(total_pages, page)
+        print(pagination_num)
 
         # test = Recipe.query.filter(~Recipe.ingredients.any(Ingredients.is_vegan == True))
         # Check to see if returned recipes have nutritional requirements
-        if not recipe_type:
-            checkboxes = [None, None, None]
-            result = (Recipe.query
-            .filter(Recipe.name.contains(search_term))
-            .order_by(Recipe.views.desc()))
-        elif "vegan" in recipe_type and "gluten-free" in recipe_type:
-            checkboxes = ["vegan", "vegetarian", "gluten_free"]
-            result = (Recipe.query
-            .filter(Recipe.name.contains(search_term))
-            .filter(~Recipe.ingredients.any(Ingredients.is_vegan == False))
-            .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
-            .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
-            .order_by(Recipe.views.desc()))
-        elif "vegan" in recipe_type:
-            checkboxes = ["vegan", "vegetarian", None]
-            result = (Recipe.query
-            .filter(Recipe.name.contains(search_term))
-            .filter(~Recipe.ingredients.any(Ingredients.is_vegan == False))
-            .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
-            .order_by(Recipe.views.desc()))
-        elif "vegetarian" in recipe_type and "gluten-free" in recipe_type:
-            checkboxes = [None, "vegetarian", "gluten_free"]
-            result = (Recipe.query
-            .filter(Recipe.name.contains(search_term))
-            .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
-            .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
-            .order_by(Recipe.views.desc()))
-        elif "vegetarian" in recipe_type:
-            checkboxes = [None, "vegetarian", None]
-            result = (Recipe.query
-            .filter(Recipe.name.contains(search_term))
-            .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
-            .order_by(Recipe.views.desc()))
-        elif "gluten-free" in recipe_type:
-            checkboxes = [None, None, "gluten_free"]
-            result = (Recipe.query
-            .filter(Recipe.name.contains(search_term))
-            .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
-            .order_by(Recipe.views.desc()))
 
-    return render_template('search.html', result=result, checkboxes=checkboxes, search_term=search_term)
+    
+    # checkboxes=checkboxes, make session
+    return render_template('search.html', result=result, checkboxes=checkboxes, search_term=search_term, next_url=next_url, prev_url=prev_url, pagination_num=pagination_num, page=page)
     
 @app.route('/register', methods=['POST', 'GET'])
 def register():

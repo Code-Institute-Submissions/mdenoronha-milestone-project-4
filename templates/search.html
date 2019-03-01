@@ -5,12 +5,10 @@
 <div class="row">
     <div class="input-field col s12">
         <form method="POST" class="search-bar" action="/search" enctype="multipart/form-data" autocomplete="off">
-            <input type="text" name="search">
-            
-            {% if search_term %}
+            <input type="text" name="search"> {% if search_term %}
             <h4>Search: {{search_term}}</h4>
             {% endif %}
-            
+
             <label>
                 {% if checkboxes[1] == "vegetarian" %}
                 <input type="checkbox" name="recipe-type" value="vegetarian" class="filled-in vegetarian" checked/>
@@ -40,27 +38,49 @@
     </div>
 </div>
 
-{% if result %} {% for res in result %}
+{% for res in result.items %}
 <img src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{res.image_file}}" alt="{{res.name}}"></img>
 <p>{{res.name}}</p>
 <p>{{res.views}}</p>
 <p>{{res.method}}</p>
+{% endfor %}
+
+
+<ul class="pagination">
+    {% if prev_url == None %}
+    <li class="disabled"><a href=""><i class="material-icons">chevron_left</i></a></li>
+    {% else %}
+    <li class="waves-effect"><a href="{{ prev_url }}"><i class="material-icons">chevron_left</i></a></li>
+    {% endif %}
+    {% for li in pagination_num %}
+    {% if li == page %}
+    <li class="active"><a href="?page={{li}}">{{li}}</a></li>
+    {% else %}
+    <li class="waves-effect"><a href="?page={{li}}">{{li}}</a></li>
+    {% endif %}
+    {% endfor %}
+    {% if next_url == None %}
+    <li class="disabled"><a href=""><i class="material-icons">chevron_right</i></a></li>
+    {% else %}
+    <li class="waves-effect"><a href="{{ next_url }}"><i class="material-icons">chevron_right</i></a></li>
+    {% endif %}
+</ul>
+
+
 
 <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
 
 <script>
-
     $(".vegan").change(function() {
-        if(this.checked) {
+        if (this.checked) {
             $(".vegetarian").prop("checked", true)
         }
     })
-    
+
     $(".vegetarian").change(function() {
-        if($(".vegan").is(':checked')) {
+        if ($(".vegan").is(':checked')) {
             $(".vegan").prop("checked", false)
         }
     })
 </script>
-
-{% endfor %} {% endif %} {% endblock %}
+{% endblock %}
