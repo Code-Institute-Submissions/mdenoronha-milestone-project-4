@@ -124,7 +124,8 @@ class Recipe(db.Model):
         
 class Ingredients(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(80), unique=True, nullable=False)
+    # Removed unique, still need to db.create_all()
+    name = db.Column(db.String(80), nullable=False)
     unit = db.Column(db.String(80), nullable=False)
     amount = db.Column(db.Integer, nullable=False)
     is_vegetarian = db.Column(db.Boolean, nullable=False)
@@ -203,6 +204,47 @@ def add_recipe_info():
         return redirect(url_for('add_recipe_ingredients'))
     
     return render_template('upload.html')
+
+@app.route('/update-recipe/info/<recipe_id>', methods=['POST', 'GET'])
+def update_recipe_info(recipe_id):
+    
+    # Add check to see if session has username
+    
+    recipe = Recipe.query.filter_by(id=recipe_id).first()
+    user = User.query.filter_by(username=session["username"]).first()
+    
+    # Check if user.id is same as recipe
+    if recipe.user_id != user.id:
+        # Change to account with message
+        return redirect(url_for('index'))
+        
+    if request.method == "POST":
+        
+        
+        try:
+            request.files['inputFile']
+        except KeyError:
+            image_file_url = recipe.image_file
+        else:
+            recipe_picture = request.files['inputFile']
+            image_file_url = save_profile_picture(recipe_picture)
+            
+        print(image_file_url)
+        
+        session["update_recipe"] = {
+            'name': request.form['dish_name'],
+            'serves': request.form['serves'],
+            'difficulty': request.form['difficulty'],
+            'time': request.form['time'],
+            'method': request.form['method'],
+            'image_file_url': image_file_url
+        }
+    
+    # If post update values and redirect to ingreds
+        
+        return redirect(url_for('update_recipe_ingredients', recipe_id=recipe_id))
+    
+    return render_template('update.html', recipe=recipe)
     
 @app.route('/add-recipe/ingredients', methods=['POST', 'GET'])
 def add_recipe_ingredients():
@@ -253,6 +295,70 @@ def add_recipe_ingredients():
     # db.session.commit()
     
     return render_template('upload_ingred.html')
+
+@app.route('/update-recipe/ingredients/<recipe_id>', methods=['POST', 'GET'])  
+def update_recipe_ingredients(recipe_id):
+    
+    user = User.query.filter_by(username=session["username"]).first()
+    recipe = Recipe.query.filter_by(id=recipe_id).first()
+    # Check if user.id is same as recipe
+    if recipe.user_id != user.id:
+        # Change to account with message
+        return redirect(url_for('index'))
+    
+    search_str = "SELECT * FROM recipe_ingredients WHERE recipe_id = %s ;" % recipe_id
+    all_ingreds_id = db.engine.execute(search_str).fetchall()
+    
+    all_ingreds = {}
+    for counter, (k, v) in enumerate(all_ingreds_id):
+
+        all_ingreds[counter] = Ingredients.query.filter_by(id=v).first()
+        
+        # Why is this not working? 
+    # Add check to see update recipe is same as recipe_id
+    try:
+        session["update_recipe"]
+    except KeyError:
+        redirect(url_for('update_recipe_info', recipe_id=recipe_id))
+    
+    if request.method == "POST":
+        
+        session["update_recipe_ingredients"] = {}
+
+        for counter, (ingred, amount, unit) in enumerate(zip(request.form.getlist('ingredient'),
+                                          request.form.getlist('amount'),
+                                          request.form.getlist('unit'))):
+                
+                is_vegetarian = False
+                is_vegan = False
+                is_gluten_free = False
+                
+                if request.form.getlist('vegetarian-' + str(counter)):
+                    is_vegetarian = True
+
+                if request.form.getlist('vegan-' + str(counter)):
+                    is_vegan = True
+                
+                if request.form.getlist('gluten-free-' + str(counter)):
+                    is_gluten_free = True
+            
+                temp_ingred = {
+                    "ingred": ingred,
+                    "amount": amount,
+                    "unit": unit,
+                    "is_vegetarian" : is_vegetarian,
+                    "is_vegan" : is_vegan,
+                    "is_gluten_free" : is_gluten_free
+                }
+                session["update_recipe_ingredients"][counter] = temp_ingred
+    
+        return redirect(url_for('update_recipe_submit', recipe_id=recipe_id))
+    
+    # temp_recipe = Recipe(name=name,image_file=image_file_url,serves = serves,difficulty=difficulty,time=time,views = 0,method = method,user_id = 1)
+    # db.session.add(temp_recipe)
+    # db.session.commit()
+    
+    return render_template('update_ingred.html', all_ingreds=all_ingreds)
     
 @app.route('/add-recipe/submit', methods=['POST', 'GET'])
 def add_recipe_submit():
@@ -262,10 +368,10 @@ def add_recipe_submit():
     except KeyError:
         redirect(url_for('add_recipe_info'))
     
-    # user = User.query.filter_by(username=session["username"]).first()
+    user = User.query.filter_by(username=session["username"]).first()
     added_recipe_ingredients = session["added_recipe_ingredients"]
     added_recipe = session["added_recipe"]
-    # added_recipe_ingredients = session["added_recipe_ingredients"]
+    
     temp_recipe = Recipe(name=session["added_recipe"]["name"],
                         image_file=session["added_recipe"]["image_file_url"],
                         serves = session["added_recipe"]["serves"],
@@ -281,15 +387,15 @@ def add_recipe_submit():
         
         # Add check to see if ingredient, unit, amount has been added before, if so skip adding it and append from db
         
-        counter = Ingredients(name=v["ingred"],
+        ingreds = Ingredients(name=v["ingred"],
                               is_vegetarian = v["is_vegetarian"],
                               is_vegan=v["is_vegan"],
                               is_gluten_free=v["is_gluten_free"],
                               unit=v["unit"],
                               amount=v["amount"])
         
-        db.session.add(counter)
-        temp_recipe.ingredients.append(counter)
+        db.session.add(ingreds)
+        temp_recipe.ingredients.append(ingreds)
     
     if request.method == "POST":
         session.pop("added_recipe")
@@ -301,6 +407,55 @@ def add_recipe_submit():
     
     
     return render_template('upload_submit.html', added_recipe=added_recipe, added_recipe_ingredients=added_recipe_ingredients)
+    
+@app.route('/update_recipe/submit/<recipe_id>', methods=['POST', 'GET'])
+def update_recipe_submit(recipe_id):
+    
+    print(session["update_recipe_ingredients"])
+        # Why is this not working?    
+    try:
+        session["added_recipe_ingredients"]
+    except KeyError:
+        redirect(url_for('add_recipe_info'))
+    
+    update_recipe_ingredients = session["update_recipe_ingredients"]
+    update_recipe = session["update_recipe"]
+                        
+    temp_recipe = Recipe.query.filter_by(id=recipe_id).first()
+    temp_recipe.name = session["update_recipe"]["name"]
+    temp_recipe.image_file = session["update_recipe"]["image_file_url"]
+    temp_recipe.serves = session["update_recipe"]["serves"]
+    temp_recipe.difficulty=session["update_recipe"]["difficulty"]
+    temp_recipe.time=session["update_recipe"]["time"]
+    temp_recipe.method = session["update_recipe"]["method"]
+    
+    for counter, (k, v) in enumerate(session["update_recipe_ingredients"].items()):
+        
+        # Add check to see if ingredient, unit, amount has been added before, if so skip adding it and append from db
+        
+        ingreds = Ingredients(name=v["ingred"],
+                              is_vegetarian = v["is_vegetarian"],
+                              is_vegan=v["is_vegan"],
+                              is_gluten_free=v["is_gluten_free"],
+                              unit=v["unit"],
+                              amount=v["amount"])
+        
+        db.session.add(ingreds)
+        temp_recipe.ingredients.append(ingreds)
+    
+    if request.method == "POST":
+        
+        delete_str = "DELETE FROM recipe_ingredients WHERE recipe_id = %s ;" % recipe_id
+        db.engine.execute(delete_str)
+        
+        session.pop("update_recipe")
+        session.pop("update_recipe_ingredients")
+        db.session.commit()
+        
+        return redirect(url_for('index'))
+    
+    
+    return render_template('update_submit.html', update_recipe=update_recipe, update_recipe_ingredients=update_recipe_ingredients)
     
 @app.route('/recipe/<recipe_name>/<recipe_id>')
 def recipe(recipe_name, recipe_id):

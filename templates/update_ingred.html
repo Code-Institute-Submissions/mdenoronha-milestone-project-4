@@ -1,0 +1,77 @@
+{% extends 'base.html' %} {% block content %}
+
+<h1>Update Ingredients</h1>
+
+
+<form method="POST" enctype="multipart/form-data">
+    {% for k, v in all_ingreds.items() %}
+    <div class="row">
+        <div class="input-field col s4">
+            <div>
+                <input placeholder="Chicken" value="{{v.name}}" name="ingredient" id="ingredient" type="text" class="validate">
+                <label for="name">Ingredient</label>
+            </div>
+        </div>
+        <div class="input-field col s4">
+            <div>
+                <input placeholder="2" value="{{v.unit}}" name="amount" id="amount" type="text" class="validate">
+                <label for="name">Amount</label>
+            </div>
+        </div>
+        <div class="input-field col s4">
+            <div>
+                <input placeholder="grams" value="{{v.amount}}" name="unit" id="unit" type="text" class="validate">
+                <label for="name">Unit</label>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <label>
+            {% if v.is_vegetarian %}
+                <input type="checkbox" checked name="vegetarian-{{loop.index0}}" value="vegetarian" class="filled-in vegetarian"/>
+            {% else %}
+                <input type="checkbox" name="vegetarian-{{loop.index0}}" value="vegetarian" class="filled-in vegetarian"/>
+            {% endif %}
+            <span>Vegetarian</span>
+        </label>
+        <label>
+            {% if v.is_vegan %}
+            <input checked type="checkbox" name="vegan-{{loop.index0}}" value="vegan" class="filled-in vegan" />
+            {% else %}
+            <input type="checkbox" name="vegan-{{loop.index0}}" value="vegan" class="filled-in vegan" />
+            {% endif %}
+        <span>Vegan</span>
+        </label>
+        <label>
+            {% if v.is_gluten_free %}
+            <input checked type="checkbox" name="gluten-free-{{loop.index0}}" value="gluten-free" class="filled-in gluten-free" />
+            {% else %}
+            <input type="checkbox" name="gluten-free-{{loop.index0}}" value="gluten-free" class="filled-in gluten-free" />
+            {% endif %}
+            <span>Gluten Free</span>
+        </label>
+    </div>
+    {% endfor %}
+    <button>Submit</button>
+</form>
+<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+<script>
+    $(document).ready(function() {
+        $('select').formSelect();
+    });
+
+
+    $(".vegan").change(function() {
+        if (this.checked) {
+            $(".vegetarian").prop("checked", true)
+        }
+    })
+
+    $(".vegetarian").change(function() {
+        if ($(".vegan").is(':checked')) {
+            $(".vegan").prop("checked", false)
+        }
+    })
+</script>
+
+{% endblock %}

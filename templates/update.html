@@ -1,0 +1,97 @@
+{% extends 'base.html' %} {% block content %}
+
+<h1>Upload a file</h1>
+
+
+<form method="POST" enctype="multipart/form-data">
+    <p>
+        <div class="input-field col s6">
+            <!--Recipe Name-->
+            <div>
+                <input placeholder="Chicken Carbonara" name="dish_name" id="name" type="text" value="{{recipe.name}}" class="validate">
+                <label for="name">Dish Name</label>
+            </div>
+            Serves
+            <div>
+                <select name="serves">
+              <option value="" disabled selected>Choose your option</option>
+              {% for option in range(0,4) %}
+              {% if loop.index == recipe.serves %}
+              <option selected value="{{loop.index}}">{{loop.index}}</option>
+              {% else %}
+              <option value="{{loop.index}}">{{loop.index}}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+                <label>Serves</label>
+            </div>
+            <!--Difficulty-->
+            <div>
+                <select name="difficulty">
+              <option value="" disabled selected>Choose your option</option>
+              {% set difficulty = ["easy", "medium", "hard"] %}
+              {% for option in difficulty %}
+              {% if option == recipe.difficulty %}
+              <option selected value="{{option}}">{{option |capitalize }}</option>
+              {% else %}
+              <option value="{{option}}">{{option}}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+                <label>Difficulty</label>
+            </div>
+            <!--Time-->
+            <div>
+                <select name="time">
+              <option value="" disabled selected>Choose your option</option>
+              <!--Change 120 to max time taken (to a limit). Find by query with sort filter-->
+              {% for option in range(1,13) %}
+              {% if option * 10 == recipe.time %}
+              <option selected value="{{option * 10}}">{{option * 10}} Mins</option>
+              {% else %}
+              <option value="{{option * 10}}">{{option * 10}} Mins</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+                <label>Time</label>
+            </div>
+            <!--Method-->
+            <div>
+                <textarea name="method" id="method-input" class="materialize-textarea">{{recipe.method}}</textarea>
+                <label for="method-input" required>Method</label>
+            </div>
+            <div>
+                <a class="change-recipe-image waves-effect waves-light btn">Change Recipe Image</a>
+                <!--Add limits to uploads-->
+                <input class="input-recipe-image hidden" type=file name=inputFile>
+
+            </div>
+            <div>
+                <img class="recipe-image" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe.image_file}}" alt="{{recipe.name}}"></img>
+            </div>
+        </div>
+        <button>Submit</button>
+</form>
+<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+
+<script>
+    $(document).ready(function() {
+        $('select').formSelect();
+    });
+
+    $(".change-recipe-image").on('click', function() {
+        if ($(".input-recipe-image").hasClass(("hidden"))) {
+            $(this).html("Cancel");
+            $(".input-recipe-image").removeClass("hidden");
+            $(".recipe-image").addClass("hidden");
+        }
+        else {
+            $(this).html("Change Recipe Image");
+            $(".input-recipe-image").addClass("hidden");
+            $(".input-recipe-image").val('');
+            $(".recipe-image").removeClass("hidden");
+        }
+    })
+</script>
+
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %} {% block content %}
+
+<h1>Submit Recipe</h1>
+
+{% for k, v in update_recipe.items() %}
+
+{% if k != "image_file_url" %}
+<p><strong>{{k}}</strong></p>
+<p>{{v}}</p>
+{% else %}
+<img src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{v}}"></img>
+{% endif %}
+
+{% endfor %}
+
+
+{% for res in update_recipe_ingredients.items() %}
+
+<!--Why does 1 work? Does it work with more than 2 ingredients?-->
+<p>{{res[1]["ingred"]}}</p>
+<p>{{res[1]["amount"]}} {{res[1]["unit"]}}</p>
+<p>Is Vegetarian: {{res[1]["is_vegetarian"]}}</p>
+<p>Is Vegan: {{res[1]["is_vegan"]}}</p>
+<p>Is Gluten Free: {{res[1]["is_gluten_free"]}}</p>
+
+{% endfor %}
+
+<form method="POST" enctype="multipart/form-data">
+    <button>Add Recipe</button>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+
+<script>
+    $(document).ready(function() {
+        $('select').formSelect();
+    });
+</script>
+
+{% endblock %}
