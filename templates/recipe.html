@@ -1,8 +1,97 @@
-{% extends 'base.html' %}
-{% block content %}
+{% extends 'base.html' %} {% block content %}
 
-<img src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe_result.image_file}}" alt="{{recipe_result.name}}"></img>
-<p>{{recipe_result.name}}</p>
-<p>{{recipe_result.method}}</p>
+<div class="recipe-header">
+    <img class="recipe-image" src="{{ url_for('static', filename='imgs/background-image.png') }}" alt="{{recipe_result.name}}">
+    </img>
+    <!--<img class="recipe-image" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe_result.image_file}}" alt="{{recipe_result.name}}"></img>-->
+    <h2 class="bottom-left">Chicken Cous Cous with Red Wine Reduction</h2>
+    <!--<h2 class="bottom-left">{{recipe_result.name}}</h2>-->
+</div>
+
+<div class="recipe-page-info row">
+    <div class="card col m8 s11">
+        <div class="card-content not-last recipe-info">
+            <p><span class="bold-text">SERVES</span><br>{{recipe_result.serves}}</p>
+        </div>
+        <div class="card-content not-last recipe-info">
+            <p><span class="bold-text">DIFFICULTY</span><br> {{recipe_result.difficulty[0]|upper}}{{recipe_result.difficulty[1:] }}</p>
+        </div>
+        <div class="card-content recipe-info">
+            <p><span class="bold-text">TIME</span><br>{{recipe_result.time}} Mins</p>
+        </div>
+        <hr>
+        <div class="card-content not-last recipe-info">
+
+            <p class="inactive-allergy"><strike>VEGETARIAN</strike></p>
+
+        </div>
+        <div class="card-content not-last recipe-info">
+            <p class="active-allergy vegan">VEGAN</p>
+
+        </div>
+        <div class="card-content recipe-info">
+            <p class="active-allergy gluten-free">GLUTEN FREE</p>
+
+        </div>
+    </div>
+    <div class="view-counter-container col m4 s12">
+        <a class="btn view-count">{{ recipe_result.views }}<i class="material-icons left">remove_red_eye</i></a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col s12 m8 l5">
+        {{recipe_result.method}}
+    </div>
+    <div class="col s12 m4 l4">
+        <ul>
+            <li>1KG Chicken Breast</li>
+            <li>1KG Chicken Breast</li>
+            <li>1KG Chicken Breast</li>
+            <li>1KG Chicken Breast</li>
+            <li>1KG Chicken Breast</li>
+        </ul>
+    </div>
+    <div class="col s12 m12 l3">
+        <div class="card-container">
+            <a href="recipe/{{recipe_result.name | replace(" ", "- ")}}/{{recipe_result.id}}">
+                <div class="card">
+                    <div class="card-image">
+                        <img class="recipe-image" src="{{ url_for('static', filename='imgs/background-image.png') }}" alt="{{recipe_result.name}}"></img>
+                        <!--<img class="recipe-image med" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe_result.image_file}}" alt="{{recipe_result.name}}"></img>-->
+                    </div>
+                    <div class="card-content recipe-title">
+                        <p>{{recipe_result.name}}</p>
+                    </div>
+                    <div class="card-content not-last recipe-info">
+                        <p><span class="bold-text">SERVES</span><br>{{recipe_result.serves}}</p>
+                    </div>
+                    <div class="card-content not-last recipe-info">
+                        <p><span class="bold-text">DIFFICULTY</span><br> {{ recipe_result.difficulty[0]|upper}}{{recipe_result.difficulty[1:] }}</p>
+                    </div>
+                    <div class="card-content recipe-info">
+                        <p><span class="bold-text">TIME</span><br>{{recipe_result.time}} Mins</p>
+                    </div>
+                    <hr>
+
+                    <div class="card-content not-last recipe-info">
+
+                        <p class="inactive-allergy"><strike>VEGETARIAN</strike></p>
+
+                    </div>
+                    <div class="card-content not-last recipe-info">
+                        <p class="active-allergy vegan">VEGAN</p>
+
+                    </div>
+                    <div class="card-content recipe-info">
+                        <p class="active-allergy gluten-free">GLUTEN FREE</p>
+
+                    </div>
+                </div>
+
+        </div>
+        </a>
+    </div>
+</div>
 
 {% endblock %}
