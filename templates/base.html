@@ -7,13 +7,74 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Dosis:400,700" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css" />
 </head>
 
 
 <body>
+    
+    <nav>
+    <div class="nav-wrapper">
+      <a href="{{ url_for('index') }}" class="brand-logo">
+          <img src="{{ url_for('static', filename='imgs/recipe.png') }}"></img>
+      </a>
+      <a href="#" data-target="mobile-nav" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+      <ul class="right hide-on-med-and-down">
+          <!--Need to change-->
+        <li><a href="{{ url_for('account_my_recipes') }}">RECIPES</a></li>
+        <li><a href="{{ url_for('account_my_recipes') }}">INGREDIENTS</a></li>
+        {% if session['username'] %} 
+        <li><a class="waves-effect waves-light btn" href="{{ url_for('account_my_recipes') }}">ACCOUNT</a></li>
+        {% else %} 
+        <li><a class="waves-effect waves-light btn" href="{{ url_for('register') }}">REGISTER</a></li>
+        <li><a class="waves-effect waves-light btn" href="{{ url_for('login') }}">LOGIN</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </nav>
 
+  <ul class="sidenav" id="mobile-nav">
+        <li class="dropdown-header">MENU</li>
+        <li><a href="{{ url_for('account_my_recipes') }}">RECIPES</a></li>
+        <li><a href="{{ url_for('account_my_recipes') }}">INGREDIENTS</a></li>
+        <li class="divider"></li>
+        {% if session['username'] %} 
+        <li><a href="{{ url_for('account_my_recipes') }}">ACCOUNT</a></li>
+        {% else %} 
+        <li><a href="{{ url_for('register') }}">REGISTER</a></li>
+        <li><a href="{{ url_for('login') }}">LOGIN</a></li>
+        {% endif %}
+  </ul>
+    
     {% block content %} {% endblock %}
+    
+    <footer class="page-footer">
+          <div class="container">
+            <div class="row">
+              <div class="col l6 s12">
+                <h5 class="white-text">Footer Content</h5>
+                <p class="grey-text text-lighten-4">You can use rows and columns here to organize your footer content.</p>
+              </div>
+              <div class="col l4 offset-l2 s12">
+                <h5 class="white-text">Get Social</h5>
+                <ul class="social-links">
+                  <li><a class="grey-text text-lighten-3" href="#!"> <i class="material-icons">face</i></a></li>
+                  <li><a class="grey-text text-lighten-3" href="#!"> <i class="material-icons">face</i></a></li>
+                  <li><a class="grey-text text-lighten-3" href="#!"> <i class="material-icons">face</i></a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="footer-copyright">
+            <div class="container">
+            © 2014 Copyright Text
+            <a class="grey-text text-lighten-4 right" href="#!">More Links</a>
+            </div>
+          </div>
+        </footer>
+    
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
