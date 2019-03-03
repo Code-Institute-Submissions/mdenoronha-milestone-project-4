@@ -1,73 +1,116 @@
-{% extends 'base.html' %} {% block content %}
-
+{%extends 'base.html'%} {%block content%}
+        
 
 <div class="background-image">
-    <div class="row">
+    <div class="black-overlay hidden">
+    </div>
+    <div class="search-bar row">
         <div class="input-field col s12">
+            <h2>SEARCH RECIPES</h2>
             <form method="POST" action="/search" enctype="multipart/form-data" autocomplete="off">
-                <input type="text" name=search id="autocomplete" class="autocomplete">
-                <input type=submit>
+                <div class="col s9">
+                    <input type="text" required name=search placeholder="e.g. Vegetable Risotto" id="autocomplete" class="autocomplete">
+                </div>
+                <div class="col s3">
+                    <button class="search-button"><i class='material-icons'>search</i></button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 
-<div>
-    <div class="row">
-        <div class="col s8">
-
-            <div class="recipe-container">
-                <h2>FEATURED</h2>
-                <!--Recipe Box-->
-                {% for recipe in featured_recipes %}
-                <div class="recipe-box med">
-                    <div class="recipe-heading">
-                        <h3>{{ recipe.name }}</h3>
-                        <i class="material-icons remove_red_eye"></i>
-                        <p>{{ recipe.views }}</p>
-                    </div>
-                    <div class="recipe-image-container">
-                        <img class="recipe-image med" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe.image_file}}" alt="{{recipe.name}}"></img>
-                    </div>
-                    <div class="recipe-box-details">
-                        <p>SERVES: {{recipe.serves}}</p>
-                        <p>DIFFICULTY: {{recipe.difficulty}}</p>
-                        <p>TIME: {{recipe.time}} Mins</p>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
+<div class="featured-recipes row">
+{% for recipe in featured_recipes %}
+    <div class="col s12 m6">
+    <div class="card-container">
+    <a href="recipe/{{recipe.name | replace(" ", "-")}}/{{recipe.id}}">
+      <div class="card">
+        <div class="card-image">
+            <img class="recipe-image" src="{{ url_for('static', filename='imgs/background-image.png') }}" alt="{{recipe.name}}"></img>
+            <!--<img class="recipe-image med" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe.image_file}}" alt="{{recipe.name}}"></img>-->
         </div>
-        <div class="col s4">
-            <div class="recipe-container">
-                <h2><span class="green-text">VEGAN</span> FAVS</h2>
-                <!--Recipe Box-->
-                {% for recipe in vegan_recipes %}
-                <div class="recipe-box sml">
-                    <div class="recipe-heading">
-                        <h3>{{ recipe.name }}</h3>
-                        <i class="material-icons remove_red_eye"></i>
-                        <p>{{ recipe.views }}</p>
-                    </div>
-                    <div class="recipe-image-container">
-                        <img class="recipe-image sml" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe.image_file}}" alt="{{recipe.name}}"></img>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
+        <div class="card-content recipe-title">
+          <p>{{recipe.name}}</p>
         </div>
+        <div class="card-content not-last recipe-info">
+          <p><span class="bold-text">SERVES</span><br>{{recipe.serves}}</p>
+        </div>
+        <div class="card-content not-last recipe-info">
+          <p><span class="bold-text">DIFFICULTY</span><br> {{ recipe.difficulty[0]|upper}}{{recipe.difficulty[1:] }}</p>
+        </div>
+        <div class="card-content recipe-info">
+          <p><span class="bold-text">TIME</span><br>{{recipe.time}} Mins</p>
+        </div>
+        <hr>
+        <div class="card-content not-last recipe-info">
+            {% if allergy_info[recipe.id]['is_vegetarian'] == 1 %}
+             <p class="active-allergy vegetarian">VEGETARIAN</p>
+            {% else %}
+            <p class="inactive-allergy"><strike>VEGETARIAN</strike></p>
+            {% endif %}
+        </div>
+        <div class="card-content not-last recipe-info">
+          {% if allergy_info[recipe.id]['is_vegan'] == 1 %}
+             <p class="active-allergy vegan">VEGAN</p>
+            {% else %}
+            <p class="inactive-allergy"><strike>VEGAN</strike></p>
+            {% endif %}
+        </div>
+        <div class="card-content recipe-info">
+          {% if allergy_info[recipe.id]['is_gluten_free'] == 1 %}
+             <p class="active-allergy gluten-free">GLUTEN FREE</p>
+            {% else %}
+            <p class="inactive-allergy"><strike>GLUTEN FREE</strike></p>
+            {% endif %}
+        </div>
+      </div>
+      </a>
+      </div>
     </div>
+{% endfor %}
+</div>
 
 
+<div class="hide-on-small-only row allergy-links">
+    <h2>Special Diets</h2>
+    <div class="col s12 m4">
+        <a class="carousel-item" href="/search"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan-link.png') }}" alt="vegan recipes"><div class="allergy-text med">Gluten Free</div></img></a>
+    </div>
+    <div class="col s12 m4">
+        <a class="carousel-item" href="/search"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan-link.png') }}" alt="vegetarian recipes"><div class="allergy-text med">Gluten Free</div></img></a>
+    </div>
+    <div class="col s12 m4">
+        <a class="carousel-item" href="/search"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan-link.png') }}" alt="gluten free recipes"><div class="allergy-text med">Gluten Free</div></img></a>
+    </div>
+</div>
 
+<div class="show-on-small hide-on-med-and-up carousel-title">
+        <h2>Special Diets</h2>
+    </div>
+<div class="show-on-small hide-on-med-and-up carousel">
+    <a class="carousel-item" href="/search"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan-link.png') }}" alt="gluten free recipes"></img><div class="allergy-text">Gluten Free</div></a>
+    <a class="carousel-item" href="/search"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan-link.png') }}" alt="vegetarian recipes"></img><div class="allergy-text">Gluten Free</div></a>
+    <a class="carousel-item" href="/search"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan-link.png') }}" alt="vegan recipes"></img><div class="allergy-text">Gluten Free</div></a>
+  </div>
 
+  
+  
     <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
     <script>
         // Autocomplete functionality
         var elem = $(".autocomplete")
-        var instance = M.Autocomplete.init(elem);
+
+        
+        $('.autocomplete').on('input',function(){
+            if($(this).val() != ""){
+                $('.search-button').addClass('active-button')
+            } else {
+                $('.search-button').removeClass('active-button')
+            }
+        })
+        
 
         
         $("body").on('DOMSubtreeModified', elem, function() {
@@ -83,6 +126,12 @@
         var recipe_object = JSON.parse("{{recipe_object}}".replace(/&#34;/g, '"'))
 
         $(document).ready(function() {
+            $('.carousel').carousel({
+                dist: 0,
+                padding: 50,
+                noWrap: true,
+            });
+            $('.sidenav').sidenav();
             $('input.autocomplete').autocomplete({
                 data: recipe_object,
                 limit: 7,
@@ -90,10 +139,10 @@
           // Callback function when value is autcompleted.
                     var val2 = val.replace(/ /g, "-");
                     window.open('/recipe/' + val2 + "/" + recipe_object[val], "_self");
-                
                 }
             });
         });
     </script>
 
-    {% endblock %}
+
+    {%endblock%}

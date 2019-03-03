@@ -174,20 +174,30 @@ def index():
     .replace(u"'", u'\\u0027'))
     
     # Altering the homepage 
-    featured_recipes_ids = [1,2,3]
-    vegan_recipes_ids = [4,5,6,7]
+    allergies = ['is_gluten_free','is_vegan','is_vegetarian']
+    featured_recipes_ids = [5, 6, 9, 10]
+    vegan_recipes_ids = [4,5, 6, 7]
     featured_recipes = []
     vegan_recipes = []
+    allergy_info = {}
+
     
     for recipe in featured_recipes_ids:
         temp_recipe = Recipe.query.filter_by(id=recipe).first()
         featured_recipes.append(temp_recipe)
+        temp_allergy = {}
+        for allergy in allergies:
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
+            temp_allergy[allergy] = allergy_res[0][0]
+        allergy_info[recipe] = temp_allergy
+
     for recipe in vegan_recipes_ids:
         temp_recipe = Recipe.query.filter_by(id=recipe).first()
         vegan_recipes.append(temp_recipe)
         
+    print(allergy_info)
     
-    return render_template('index.html',recipe_object=recipe_object, featured_recipes=featured_recipes, vegan_recipes=vegan_recipes)
+    return render_template('index.html',recipe_object=recipe_object, featured_recipes=featured_recipes, vegan_recipes=vegan_recipes, allergy_info=allergy_info)
     
 @app.route('/add-recipe/info', methods=['POST', 'GET'])
 def add_recipe_info():
@@ -466,6 +476,7 @@ def update_recipe_submit(recipe_id):
     
 @app.route('/recipe/<recipe_name>/<recipe_id>')
 def recipe(recipe_name, recipe_id):
+    session["username"] = "mstonieri"
     
     recipe_result = Recipe.query.filter_by(id=recipe_id).first()
     
@@ -480,7 +491,9 @@ def recipe(recipe_name, recipe_id):
         
         if not viewed_recipe:
             user.viewed_recipe.append(recipe_result)
+            recipe_result.views = recipe_result.views + 1
             db.session.commit()
+            
 
     
     recipe_result = Recipe.query.filter_by(id=recipe_id).first()
@@ -591,7 +604,7 @@ def login():
 def login_user():
     
     username = request.form["username"].lower()
-    password = request.form["password"].lower()
+    password = request.form["password"]
     
     user = User.query.filter_by(username=username).first()
     
@@ -600,10 +613,12 @@ def login_user():
     except AttributeError:
         return redirect(url_for('login'))
     
-    if user.password == password:
+    if str(user.password) == str(password):
+        print("works")
         session["username"] = username
         return redirect(url_for('index'))
     else: 
+        print("not works")
         return redirect(url_for('login'))
 
 if __name__ == '__main__':
