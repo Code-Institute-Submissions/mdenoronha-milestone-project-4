@@ -41,7 +41,7 @@ def create_pagination_num(total_pages, page):
                 
     return pagination_num
     
-def return_search_testing(filters, search_term, page):
+def return_search(filters, search_term, page):
     # Recipe_type is a list of filters a user has selected
     # search_term is the search string a user has inputted
     # page is the current page in the pagination a user is on
@@ -94,58 +94,6 @@ def return_search_testing(filters, search_term, page):
 #         session.pop("search-term")
 #         session.pop("filters")
     
-def return_search(recipe_type, search_term, page):
-    # Recipe_type is a list of filters a user has selected
-    # search_term is the search string a user has inputted
-    # page is the current page in the pagination a user is on
-    if not recipe_type:
-        checkboxes = [None, None, None]
-        result = (Recipe.query
-        .filter(Recipe.name.contains(search_term))
-        .order_by(Recipe.views.desc())
-        .paginate(page, 6, False))
-    elif "vegan" in recipe_type and "gluten-free" in recipe_type:
-        checkboxes = ["vegan", "vegetarian", "gluten_free"]
-        result = (Recipe.query
-        .filter(Recipe.name.contains(search_term))
-        .filter(~Recipe.ingredients.any(Ingredients.is_vegan == False))
-        .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
-        .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
-        .order_by(Recipe.views.desc())
-        .paginate(page, 6, False))
-    elif "vegan" in recipe_type:
-        checkboxes = ["vegan", "vegetarian", None]
-        result = (Recipe.query
-        .filter(Recipe.name.contains(search_term))
-        .filter(~Recipe.ingredients.any(Ingredients.is_vegan == False))
-        .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
-        .order_by(Recipe.views.desc())
-        .paginate(page, 6, False))
-    elif "vegetarian" in recipe_type and "gluten-free" in recipe_type:
-        checkboxes = [None, "vegetarian", "gluten_free"]
-        result = (Recipe.query
-        .filter(Recipe.name.contains(search_term))
-        .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
-        .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
-        .order_by(Recipe.views.desc())
-        .paginate(page, 6, False))
-    elif "vegetarian" in recipe_type:
-        checkboxes = [None, "vegetarian", None]
-        result = (Recipe.query
-        .filter(Recipe.name.contains(search_term))
-        .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
-        .order_by(Recipe.views.desc())
-        .paginate(page, 6, False))
-    elif "gluten-free" in recipe_type:
-        checkboxes = [None, None, "gluten_free"]
-        result = (Recipe.query
-        .filter(Recipe.name.contains(search_term))
-        .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
-        .order_by(Recipe.views.desc())
-        .paginate(page, 6, False))
-            
-    return result
-
 # Assistance for function provided by CI tutor
 def save_profile_picture(form_picture):          
     random_hex = ''.join([random.choice(string.digits) for n in range(8)])    
@@ -220,12 +168,19 @@ def search_post():
     # filters
     filters = {}
     # Get form data
-    recipe_type = request.form.getlist('recipe-type')
-    difficulty_type = request.form.getlist('difficulty-type')
-    serves_value = request.form["serves-value"]
-    time_value = request.form["time-value"]
-    ingredients_value = request.form["ingredients-value"]
-    
+    try:
+        recipe_type = request.form.getlist('recipe-type')
+        difficulty_type = request.form.getlist('difficulty-type')
+        serves_value = request.form["serves-value"]
+        time_value = request.form["time-value"]
+        ingredients_value = request.form["ingredients-value"]
+    except KeyError:
+        recipe_type = []
+        difficulty_type = [u'easy', u'medium', u'hard']
+        serves_value = "1,6"
+        time_value = "10,180"
+        ingredients_value = ""
+        
     # Ingredients
     if not ingredients_value:
         filters["ingredients"] = []
@@ -278,12 +233,8 @@ def search_get():
     if not "search_term" in session:
         session["search_term"] = ""
     search_term = session["search_term"]
-    result = return_search_testing(session["filters"], session["search_term"], page)
     
-    next_url = url_for('search', page=result.next_num) \
-    if result.has_next else None
-    prev_url = url_for('search', page=result.prev_num) \
-    if result.has_prev else None
+    result = return_search(session["filters"], session["search_term"], page)
     
     total_pages = result.pages
     pagination_num = create_pagination_num(total_pages, page)
@@ -305,8 +256,6 @@ def search_get():
             temp_allergy[allergy] = allergy_res[0][0]
         allergy_info[recipe] = temp_allergy
     
-    # if "submission_test" in session:
-    #     submission_test = session["submission_test"]
 
     return render_template('search.html', allergy_info=allergy_info, result=result, search_term=search_term, pagination_num=pagination_num, page=page) 
 
