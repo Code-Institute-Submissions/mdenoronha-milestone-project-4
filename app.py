@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, request, url_for, send_file, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
+from sqlalchemy import or_, and_
 import os
 import json
 from flask_s3 import FlaskS3
@@ -36,18 +37,73 @@ def create_pagination_num(total_pages, page):
         # Added to ensure active number is in middle of pagination where possible
         else:
             if page + counter - 2 > 0 and page + counter - 2 < total_pages:
-                print(total_pages)
                 pagination_num.append(int(page + counter - 2))
                 
     return pagination_num
+    
+def return_search_testing(filters, search_term, page):
+    # Recipe_type is a list of filters a user has selected
+    # search_term is the search string a user has inputted
+    # page is the current page in the pagination a user is on
+    
+    # Don't need to check as filters will always be there?
+    # if not filters["recipe_type"] and not filters["difficulty_type"]:
+    #     checkboxes = [None, None, None]
+    #     result = (Recipe.query
+    #     .filter(Recipe.name.contains(search_term))
+    #     .order_by(Recipe.views.desc())
+    #     .paginate(page, 6, False))
+    # else:
 
+    filter_list_for_recipe_type = []
+    for filter_res in filters["recipe_type"]:
+        if filter_res == "gluten-free":
+            filter_list_for_recipe_type.append(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
+        if filter_res == "vegan":
+            filter_list_for_recipe_type.append(~Recipe.ingredients.any(Ingredients.is_vegan == False))
+        if filter_res == "vegetarian":
+            filter_list_for_recipe_type.append(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
+            
+    ingredients_filter_list = []
+    
+    filter_list_for_ingredients = []
+    if filters["ingredients"]:
+        for ingredient in filters["ingredients"]:
+            filter_list_for_ingredients.append(Recipe.ingredients.any(Ingredients.name == str(ingredient)))
+    else: 
+        filter_list_for_ingredients.append(Recipe.ingredients.any(Ingredients.id >= 1))
+
+    checkboxes = ["vegan", "vegetarian", "gluten_free"]
+    result = (Recipe.query
+    .filter(Recipe.name.contains(search_term))
+    .filter(*filter_list_for_recipe_type)
+    .filter(*filter_list_for_ingredients)
+    .filter(Recipe.difficulty.in_(filters["difficulty_type"]))
+    .filter(Recipe.serves >= filters["serves"][0])
+    .filter(Recipe.serves <= filters["serves"][1])
+    .filter(Recipe.time >= filters["time"][0])
+    .filter(Recipe.time <= filters["time"][1])
+    .order_by(Recipe.views.desc())
+    .paginate(page, 6, False))
+    
+            
+    return result
+    
+# def remove_search_filters():
+#     if request.path != "testing":
+#         session.pop("search-term")
+#         session.pop("filters")
+    
 def return_search(recipe_type, search_term, page):
+    # Recipe_type is a list of filters a user has selected
+    # search_term is the search string a user has inputted
+    # page is the current page in the pagination a user is on
     if not recipe_type:
         checkboxes = [None, None, None]
         result = (Recipe.query
         .filter(Recipe.name.contains(search_term))
         .order_by(Recipe.views.desc())
-        .paginate(page, 15, False))
+        .paginate(page, 6, False))
     elif "vegan" in recipe_type and "gluten-free" in recipe_type:
         checkboxes = ["vegan", "vegetarian", "gluten_free"]
         result = (Recipe.query
@@ -56,7 +112,7 @@ def return_search(recipe_type, search_term, page):
         .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
         .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
         .order_by(Recipe.views.desc())
-        .paginate(page, 15, False))
+        .paginate(page, 6, False))
     elif "vegan" in recipe_type:
         checkboxes = ["vegan", "vegetarian", None]
         result = (Recipe.query
@@ -64,7 +120,7 @@ def return_search(recipe_type, search_term, page):
         .filter(~Recipe.ingredients.any(Ingredients.is_vegan == False))
         .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
         .order_by(Recipe.views.desc())
-        .paginate(page, 15, False))
+        .paginate(page, 6, False))
     elif "vegetarian" in recipe_type and "gluten-free" in recipe_type:
         checkboxes = [None, "vegetarian", "gluten_free"]
         result = (Recipe.query
@@ -72,21 +128,21 @@ def return_search(recipe_type, search_term, page):
         .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
         .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
         .order_by(Recipe.views.desc())
-        .paginate(page, 15, False))
+        .paginate(page, 6, False))
     elif "vegetarian" in recipe_type:
         checkboxes = [None, "vegetarian", None]
         result = (Recipe.query
         .filter(Recipe.name.contains(search_term))
         .filter(~Recipe.ingredients.any(Ingredients.is_vegetarian == False))
         .order_by(Recipe.views.desc())
-        .paginate(page, 15, False))
+        .paginate(page, 6, False))
     elif "gluten-free" in recipe_type:
         checkboxes = [None, None, "gluten_free"]
         result = (Recipe.query
         .filter(Recipe.name.contains(search_term))
         .filter(~Recipe.ingredients.any(Ingredients.is_gluten_free == False))
         .order_by(Recipe.views.desc())
-        .paginate(page, 15, False))
+        .paginate(page, 6, False))
             
     return result
 
@@ -153,6 +209,107 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
     
+@app.route('/search', methods=["POST"])
+def search_post():
+    
+    search_term = request.form["search"] 
+    session["search_term"] = search_term
+    
+    page = request.args.get('page', 1, type=int)
+    
+    # filters
+    filters = {}
+    # Get form data
+    recipe_type = request.form.getlist('recipe-type')
+    difficulty_type = request.form.getlist('difficulty-type')
+    serves_value = request.form["serves-value"]
+    time_value = request.form["time-value"]
+    ingredients_value = request.form["ingredients-value"]
+    
+    # Ingredients
+    if not ingredients_value:
+        filters["ingredients"] = []
+    else:
+        ingredients_value_list = [ingredients_value][0].split(',')
+        filters["ingredients"] = ingredients_value_list
+    # Serves
+    serves_value_list = [serves_value][0].split(',')
+    filters["serves"] = serves_value_list
+    
+    # Time
+    time_value_list = [time_value][0].split(',')
+    filters["time"] = time_value_list
+    
+    # Recipe type and difficulty
+    recipe_type_list = []
+    difficulty_list = []
+    
+    for r in recipe_type:
+        recipe_type_list.append(r)
+    # If there is no recipe_type, session will show as empty
+    filters["recipe_type"] = recipe_type_list
+    
+    for difficulty in difficulty_type:
+        difficulty_list.append(difficulty)
+    # If there is no recipe_type, session will show as empty
+    filters["difficulty_type"] = difficulty_list
+    
+    # Apply all filters to session
+    session["filters"] = filters
+    
+    # submission_test = request.form["submission-test"]
+    # session["submission_test"] = submission_test
+    
+    return redirect(url_for('search_get'))
+
+# Split into Post/Redirect/Get to remove Confirm Form Submission message
+@app.route('/search', methods=["GET"])
+def search_get():
+    page = request.args.get('page', 1, type=int)
+    
+    if "filters" not in session:
+        session["filters"] = {
+            'difficulty_type': [u'easy', u'medium', u'hard'], 
+            'recipe_type': [], 
+            'time': [u'10', u'180'], 
+            'serves': [u'1', u'6'], 
+            'ingredients': []
+        }
+    if not "search_term" in session:
+        session["search_term"] = ""
+    search_term = session["search_term"]
+    result = return_search_testing(session["filters"], session["search_term"], page)
+    
+    next_url = url_for('search', page=result.next_num) \
+    if result.has_next else None
+    prev_url = url_for('search', page=result.prev_num) \
+    if result.has_prev else None
+    
+    total_pages = result.pages
+    pagination_num = create_pagination_num(total_pages, page)
+    
+    allergies = ['is_gluten_free','is_vegan','is_vegetarian']
+    search_recipes = []
+    allergy_info = {}
+    
+    search_recipes_ids = []
+    for res in result.items:
+      search_recipes_ids.append(res.id)
+
+    for recipe in search_recipes_ids:
+        temp_recipe = Recipe.query.filter_by(id=recipe).first()
+        search_recipes.append(temp_recipe)
+        temp_allergy = {}
+        for allergy in allergies:
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
+            temp_allergy[allergy] = allergy_res[0][0]
+        allergy_info[recipe] = temp_allergy
+    
+    # if "submission_test" in session:
+    #     submission_test = session["submission_test"]
+
+    return render_template('search.html', allergy_info=allergy_info, result=result, search_term=search_term, pagination_num=pagination_num, page=page) 
+
 @app.route('/')
 def index():
     # Dealing with ResultProxy help https://kite.com/python/docs/sqlalchemy.engine.result.ResultProxy
@@ -176,9 +333,7 @@ def index():
     # Altering the homepage 
     allergies = ['is_gluten_free','is_vegan','is_vegetarian']
     featured_recipes_ids = [5, 6, 9, 10]
-    vegan_recipes_ids = [4,5, 6, 7]
     featured_recipes = []
-    vegan_recipes = []
     allergy_info = {}
 
     
@@ -191,13 +346,9 @@ def index():
             temp_allergy[allergy] = allergy_res[0][0]
         allergy_info[recipe] = temp_allergy
 
-    for recipe in vegan_recipes_ids:
-        temp_recipe = Recipe.query.filter_by(id=recipe).first()
-        vegan_recipes.append(temp_recipe)
-        
-    print(allergy_info)
-    
-    return render_template('index.html',recipe_object=recipe_object, featured_recipes=featured_recipes, vegan_recipes=vegan_recipes, allergy_info=allergy_info)
+
+
+    return render_template('index.html',recipe_object=recipe_object, featured_recipes=featured_recipes, allergy_info=allergy_info)
     
 @app.route('/add-recipe/info', methods=['POST', 'GET'])
 def add_recipe_info():
@@ -246,8 +397,7 @@ def update_recipe_info(recipe_id):
             recipe_picture = request.files['inputFile']
             image_file_url = save_profile_picture(recipe_picture)
             
-        print(image_file_url)
-        
+
         session["update_recipe"] = {
             'name': request.form['dish_name'],
             'serves': request.form['serves'],
@@ -428,7 +578,6 @@ def add_recipe_submit():
 @app.route('/update_recipe/submit/<recipe_id>', methods=['POST', 'GET'])
 def update_recipe_submit(recipe_id):
     
-    print(session["update_recipe_ingredients"])
         # Why is this not working?    
     try:
         session["added_recipe_ingredients"]
@@ -476,13 +625,12 @@ def update_recipe_submit(recipe_id):
     
 @app.route('/recipe/<recipe_name>/<recipe_id>')
 def recipe(recipe_name, recipe_id):
-    session["username"] = "mstonieri"
-    
+
     recipe_result = Recipe.query.filter_by(id=recipe_id).first()
     
     # Will need to change to try
-    if session["username"]:
-        
+    if "username" in session:
+
         user = User.query.filter_by(username=session["username"]).first()
         
         # Change to user_id when database is updated
@@ -490,6 +638,7 @@ def recipe(recipe_name, recipe_id):
         viewed_recipe = db.engine.execute(search_str).fetchall()
         
         if not viewed_recipe:
+
             user.viewed_recipe.append(recipe_result)
             recipe_result.views = recipe_result.views + 1
             db.session.commit()
@@ -505,25 +654,12 @@ def search():
     
     page = request.args.get('page', 1, type=int)
     
-    if "search_term" in session:
-        result = return_search(session["recipe_type"], session["search_term"], page)
-        search_term = session["search_term"]
-        total_pages = result.pages
-        pagination_num = create_pagination_num(total_pages, page)
-        # Assistance on pagination from https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-ix-pagination
-        next_url = url_for('search', page=result.next_num) \
-        if result.has_next else None
-        prev_url = url_for('search', page=result.prev_num) \
-        if result.has_prev else None
-    else:
-        result = None
-        search_term = None 
-    
     checkboxes = [None, None, None]
     
     if request.method == "POST":
         search_term = request.form["search"] 
         session["search_term"] = search_term
+        
         recipe_type = request.form.getlist('recipe-type')
         session["recipe_type"] = recipe_type
         
@@ -535,13 +671,40 @@ def search():
         
         total_pages = result.pages
         pagination_num = create_pagination_num(total_pages, page)
+        
+        allergies = ['is_gluten_free','is_vegan','is_vegetarian']
+        search_recipes = []
+        allergy_info = {}
+        
+        search_recipes_ids = []
+        for res in result.items:
+          search_recipes_ids.append(res.id)
+        
+        for recipe in search_recipes_ids:
+            temp_recipe = Recipe.query.filter_by(id=recipe).first()
+            search_recipes.append(temp_recipe)
+            temp_allergy = {}
+            for allergy in allergies:
+                allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
+                temp_allergy[allergy] = allergy_res[0][0]
+            allergy_info[recipe] = temp_allergy
+        
 
+    else:
+        result = None
+        search_term = None 
+        allergy_info = None
+        next_url = None
+        prev_url = None
+        pagination_num = []
+    
+    
         # test = Recipe.query.filter(~Recipe.ingredients.any(Ingredients.is_vegan == True))
         # Check to see if returned recipes have nutritional requirements
 
     
     # checkboxes=checkboxes, make session
-    return render_template('search.html', result=result, checkboxes=checkboxes, search_term=search_term, next_url=next_url, prev_url=prev_url, pagination_num=pagination_num, page=page)
+    return render_template('search.html', allergy_info=allergy_info, result=result, checkboxes=checkboxes, search_term=search_term, next_url=next_url, prev_url=prev_url, pagination_num=pagination_num, page=page)
     
 @app.route('/account/my-recipes', methods=['POST', 'GET'])
 def account_my_recipes():
@@ -564,8 +727,6 @@ def account_my_recipes():
     prev_url = url_for('search', page=result.prev_num) \
     if result.has_prev else None
     
-    print(type(result.items))
-    
     return render_template('account_my_recipes.html', result=result, next_url=next_url, prev_url=prev_url, pagination_num=pagination_num, page=page)
     
 @app.route('/register', methods=['POST', 'GET'])
@@ -586,12 +747,11 @@ def register_user():
     if User.query.filter_by(username=username).count() > 0:
         return redirect(url_for('register'))
     else:
+        session["username"] = username
+        
         user = User(first_name=first_name,last_name=last_name, username=username,password = password)
         db.session.add(user)
         db.session.commit()
-        
-        session["username"] = username
-    
         return redirect(url_for('index'))
     return redirect(url_for('register'))
     
@@ -614,11 +774,9 @@ def login_user():
         return redirect(url_for('login'))
     
     if str(user.password) == str(password):
-        print("works")
         session["username"] = username
         return redirect(url_for('index'))
     else: 
-        print("not works")
         return redirect(url_for('login'))
 
 if __name__ == '__main__':
