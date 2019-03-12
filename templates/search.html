@@ -1,76 +1,315 @@
 {% extends 'base.html' %} {% block content %}
-
-
-
+<div class="container">
 <div class="row">
-    <div class="input-field col s12">
-        <form method="POST" class="search-bar" action="/search" enctype="multipart/form-data" autocomplete="off">
-            <input type="text" name="search"> {% if search_term %}
+    <div class="search-page input-field col s12">
+            <form method="POST" class="search-bar" action="/search" enctype="multipart/form-data" autocomplete="off">
+            <div class="search-heading col s12">
+                <h1>Search Recipes</h1>
+            </div>
+            <div class="search-page-bar col l11 m10 s9">
+                <input class="search-page-search" type="text" name="search" value="{{ session['search_term'] }}">
+                <p class="reset-filters">Reset Fiters</p>
+            </div>
+            <div class="search-page-bar col l1 m2 s3">
+                <button class="search-button active-button"><i class='material-icons'>search</i></button>
+            </div>
+        </div>
+    </div>
+        <div class="row">
+            <!--Mobile Filter-->
+            <ul class="collapsible filter-column col s12 m4"><li>
+            <div class="collapsible-header"><a><i class="material-icons left">add</i>FILTERS</a></div>
+            <div class="collapsible-body filter-body">
+                <div>
+                    <button class="btn search-page search-button active-button">APPLY FILTERS</button>
+                </div>
+                <div class="ingredients-filter">
+                    <h3 class="filter-heading">Ingredients</h3>
+                    <input name="ingredients-value" class="master-filter" id="ingredients-chips-value-input" type="hidden" value="">
+                    
+                    <div class="ingredients-chips">
+                    </div>
+                    <p class="hidden ingredient-warning-message">Only alphabetical characters can be searched</p>
+                </div>
+                <div class="recipe-type">
+                <h3 class="filter-heading recipe-type-heading">Recipe Type</h3>
+                <label>
+                    <input type="checkbox" name="recipe-type" value="vegetarian" class="master-filter filled-in vegetarian" 
+                    {% if "vegetarian" in session["filters"]["recipe_type"] %}
+                    checked{% endif %}/>
+                    <span>Vegetarian</span>
+                  </label>
+                <label>
+                    <input type="checkbox" name="recipe-type" value="vegan" class="master-filter filled-in vegan"
+                    {% if "vegan" in session["filters"]["recipe_type"] %}
+                    checked{% endif %}/>
+                    <span>Vegan</span>
+                </label>
+                <label>
+                    <input type="checkbox" name="recipe-type" value="gluten-free" class="master-filter filled-in gluten-free"
+                    {% if "gluten-free" in session["filters"]["recipe_type"] %}
+                    checked{% endif %}/>
+                    <span>Gluten Free</span>
+                </label>
+                </div>
+                <div class="difficulty-type">
+                <h3 class="filter-heading">Difficulty Type</h3>
+                <label>
+                    <input type="checkbox" name="difficulty-type" value="easy" class="master-filter filled-in easy"
+                    {% if "easy" in session["filters"]["difficulty_type"] %}
+                    checked{% endif %}/>
+                    <span>Easy</span>
+                </label>
+                <label>
+                    <input type="checkbox" name="difficulty-type" value="medium" class="master-filter filled-in medium"
+                    {% if "medium" in session["filters"]["difficulty_type"] %}
+                    checked{% endif %}/>
+                    <span>Medium</span>
+                </label>
+                <label>
+                    <input type="checkbox" name="difficulty-type" value="hard" class="master-filter filled-in hard"
+                    {% if "hard" in session["filters"]["difficulty_type"] %}
+                    checked{% endif %}/>
+                    <span>Hard</span>
+                </label>
+                </div>
+                <div class="serves-type">
+                    <h3 class="filter-heading serves-heading">Serves</h3>
+                    <input name="serves-value" id="serves-slider-value-input" class="master-filter" type="hidden" value="">
+                    <div><span id="serves-slider-value"></span> People</div>
+                    <div class="slider-container">
+                        <div id="serves-slider"></div>
+                    </div>
+                </div>
+                <div class="time-type">
+                    <h3 class="filter-heading time-heading">Time</h3>
+                    <input name="time-value" id="time-slider-value-input" class="master-filter" type="hidden" value="">
+                    <div><span id="time-slider-value"></span> Mins</div>
+                    <div class="slider-container">
+                        <div id="time-slider"></div>
+                    </div>
+                </div>
+                </form>
+            </div>
+            </li></ul>
+            <div>
+               
+            </div>
+            
+            <!--https://codepen.io/anon/pen/mxXYBK-->
+    <div class="recipe-results-column col s12 m8">
+         {% if search_term %}
             <h4>Search: {{search_term}}</h4>
             {% endif %}
-
-            <label>
-                {% if checkboxes[1] == "vegetarian" %}
-                <input type="checkbox" name="recipe-type" value="vegetarian" class="filled-in vegetarian" checked/>
-                {% else %}
-                <input type="checkbox" name="recipe-type" value="vegetarian" class="filled-in vegetarian"/>
-                {% endif %}
-                <span>Vegetarian</span>
-              </label>
-            <label>
-                {% if checkboxes[0] == "vegan" %}
-                <input type="checkbox" name="recipe-type" value="vegan" class="filled-in vegan" checked />
-                {% else %}
-                <input type="checkbox" name="recipe-type" value="vegan" class="filled-in vegan" />
-                {% endif %}
-                <span>Vegan</span>
-            </label>
-            <label>
-                {% if checkboxes[2] == "gluten_free" %}
-                <input type="checkbox" name="recipe-type" value="gluten-free" class="filled-in gluten-free" checked/>
-                {% else %}
-                <input type="checkbox" name="recipe-type" value="gluten-free" class="filled-in gluten-free"/>
-                {% endif %}
-                <span>Gluten Free</span>
-            </label>
-            <button>Submit</button>
-        </form>
+    {% if not result.items %}
+    <p>No matching recipes. Try adjusting your search or filters.</p>
+    {% else %}
+    {% for recipe in result.items %}
+    <div class="col s12 l6">
+        <div class="card-container">
+            <a href="recipe/{{recipe.name | replace(" ", "- ")}}/{{recipe.id}}">
+                <div class="card">
+                    <div class="card-image">
+                        <img class="search-page recipe-image" src="{{ url_for('static', filename='imgs/background-image.png') }}" alt="{{recipe.name}}"></img>
+                        <!--<img class="recipe-image med" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe.image_file}}" alt="{{recipe.name}}"></img>-->
+                    </div>
+                    <div class="card-content recipe-title">
+                        <p>{{recipe.name}}</p>
+                    </div>
+                    <div class="card-content not-last recipe-info">
+                        <p><span class="bold-text">SERVES</span><br>{{recipe.serves}}</p>
+                    </div>
+                    <div class="card-content not-last recipe-info">
+                        <p><span class="bold-text">DIFFICULTY</span><br> {{ recipe.difficulty[0]|upper}}{{recipe.difficulty[1:] }}</p>
+                    </div>
+                    <div class="card-content recipe-info">
+                        <p><span class="bold-text">TIME</span><br>{{recipe.time}} Mins</p>
+                    </div>
+                    <hr> {% if not allergy_info == None %}
+                    <div class="card-content not-last recipe-info">
+                        {% if allergy_info[recipe.id]['is_vegetarian'] == 1 %}
+                        <p class="active-allergy vegetarian">VEGETARIAN</p>
+                        {% else %}
+                        <p class="inactive-allergy"><strike>VEGETARIAN</strike></p>
+                        {% endif %}
+                    </div>
+                    <div class="card-content not-last recipe-info">
+                        {% if allergy_info[recipe.id]['is_vegan'] == 1 %}
+                        <p class="active-allergy vegan">VEGAN</p>
+                        {% else %}
+                        <p class="inactive-allergy"><strike>VEGAN</strike></p>
+                        {% endif %}
+                    </div>
+                    <div class="card-content recipe-info">
+                        {% if allergy_info[recipe.id]['is_gluten_free'] == 1 %}
+                        <p class="active-allergy gluten-free">GLUTEN FREE</p>
+                        {% else %}
+                        <p class="inactive-allergy"><strike>GLUTEN FREE</strike></p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </a>
+        </div>
     </div>
+    {% endfor %}
+    {% endif %}
+</div>
 </div>
 
-{% for res in result.items %}
-<img src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{res.image_file}}" alt="{{res.name}}"></img>
-<p>{{res.name}}</p>
-<p>{{res.views}}</p>
-<p>{{res.method}}</p>
-{% endfor %}
-
-
+<div>
 <ul class="pagination">
-    {% if prev_url == None %}
-    <li class="disabled"><a href=""><i class="material-icons">chevron_left</i></a></li>
-    {% else %}
-    <li class="waves-effect"><a href="{{ prev_url }}"><i class="material-icons">chevron_left</i></a></li>
-    {% endif %}
-    {% for li in pagination_num %}
-    {% if li == page %}
+{% if page == 1 %}
+<li><i class="inactive material-icons">chevron_left</i></a></li>
+{% else %}
+<li><a class="chevron-link" href="?page={{page - 1}}"><i class="material-icons">chevron_left</i></a></li>
+{% endif %}
+
+{% for li in pagination_num %} 
+{% if li == page %}
     <li class="active"><a href="?page={{li}}">{{li}}</a></li>
     {% else %}
     <li class="waves-effect"><a href="?page={{li}}">{{li}}</a></li>
-    {% endif %}
-    {% endfor %}
-    {% if next_url == None %}
-    <li class="disabled"><a href=""><i class="material-icons">chevron_right</i></a></li>
-    {% else %}
-    <li class="waves-effect"><a href="{{ next_url }}"><i class="material-icons">chevron_right</i></a></li>
-    {% endif %}
+{% endif %} 
+{% endfor %}
+
+{% if page == pagination_num[-1] %}
+<li><i class="inactive material-icons">chevron_right</i></a></li>
+{% else %}
+<li><a class="chevron-link" href="?page={{page + 1}}"><i class="material-icons">chevron_right</i></a></li>
+{% endif %}
 </ul>
+</div>
 
-
-
+</div>
+<!--For slider-->
+<script src='https://cdnjs.cloudflare.com/ajax/libs/wnumb/1.0.4/wNumb.min.js'></script>
 <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/13.1.1/nouislider.js"></script>
+
 
 <script>
+    // use jQuery selectors
+    
+    $('.collapsible').collapsible();
+
+    var default_filters = true
+    var serves_slider_noUiSlider = noUiSlider.create($('#serves-slider')[0], {
+        start: [1, 6],
+        connect: true,
+        step: 1,
+        range: {
+            'min': 1,
+            'max': 6
+        },
+        ariaFormat: wNumb({
+            decimals: 0
+        }),
+        format: wNumb({
+            decimals: 0,
+
+        })
+    });
+    
+    var serves_slider = $('#serves-slider')[0];
+    var serves_slider_value = $('#serves-slider-value')[0];
+    
+    serves_slider.noUiSlider.set([
+        "{{ session["filters"]["serves"][0] }}",
+        "{{ session["filters"]["serves"][1] }}"])
+
+    $("#serves-slider-value-input").val(serves_slider_noUiSlider.get());
+
+    serves_slider_noUiSlider.on("change", function() {
+        $("#serves-slider-value-input").val(serves_slider_noUiSlider.get());
+    });
+
+
+    serves_slider.noUiSlider.on('update', function(values) {
+        serves_slider_value.innerHTML = values.join(' - ');
+    });
+
+    var time_slider_noUiSlider = noUiSlider.create($('#time-slider')[0], {
+        start: [10, 180],
+        connect: true,
+        step: 10,
+        range: {
+            'min': 10,
+            'max': 180
+        },
+        ariaFormat: wNumb({
+            decimals: 0
+        }),
+        format: wNumb({
+            decimals: 0,
+
+        })
+    });
+    
+    var time_slider = $('#time-slider')[0];
+    var time_slider_value = $('#time-slider-value')[0];
+    
+    time_slider.noUiSlider.set([
+        "{{ session["filters"]["time"][0] }}",
+        "{{ session["filters"]["time"][1] }}"])
+
+    $("#time-slider-value-input").val(time_slider_noUiSlider.get());
+
+    time_slider_noUiSlider.on("change", function() {
+        $("#time-slider-value-input").val(time_slider_noUiSlider.get());
+    });
+
+    time_slider.noUiSlider.on('update', function(values) {
+        time_slider_value.innerHTML = values.join(' - ');
+    });
+    
+    $('.ingredients-chips').chips({
+        placeholder: 'e.g. Chicken',
+        data: [
+        {% for ingredient in session["filters"]["ingredients"] %}
+        {
+            tag: "{{ingredient}}",
+        },
+        {% endfor %}
+        ],
+        // Syntax below is wrong, improve?
+        onChipAdd: function() {
+            if_default()
+            var ingredients_chips_instance = M.Chips.getInstance($('.ingredients-chips'))
+            var ingredients_chips_object = ingredients_chips_instance.chipsData
+            
+            $(".ingredient-warning-message").addClass('hidden')
+            
+            for(key in ingredients_chips_object) {
+                    var value = ingredients_chips_object[key]['tag'];
+                    if (/[^a-zA-Z]/.test(value)) {
+                        ingredients_chips_instance.deleteChip(key);
+                        $(".ingredient-warning-message").removeClass('hidden')
+                    }
+                    
+            }
+            update_ingredients_input()
+            if_default()
+        },
+        onChipDelete: function() {
+            update_ingredients_input()
+            if_default()
+        }
+    });
+    
+    function update_ingredients_input() {
+        var ingredients_chips_instance = M.Chips.getInstance($('.ingredients-chips'));
+        var chips = [];
+        for(key in ingredients_chips_instance.chipsData) {
+                    var value = ingredients_chips_instance.chipsData[key]['tag'];
+                    chips.push(value)
+        }
+        $('#ingredients-chips-value-input').val(chips)
+    }
+    
+    update_ingredients_input()
+
     $(".vegan").change(function() {
         if (this.checked) {
             $(".vegetarian").prop("checked", true)
@@ -82,5 +321,83 @@
             $(".vegan").prop("checked", false)
         }
     })
+    // http://jsfiddle.net/userdude/rzdGJ/2
+    var $window = $(window)
+
+    function resize() {
+        if ($window.width() < 600) {
+            $( '.collapsible-header' ).removeClass('hidden');
+            return $('.filter-body').addClass('collapsible-body');
+        }
+
+        $('.filter-body').removeClass('collapsible-body');
+        $( '.collapsible-header' ).addClass('hidden');
+    }
+    
+    $window
+        .resize(resize)
+        .trigger('resize');
+    
+    
+    function if_default() {
+        if($('#ingredients-chips-value-input').val() == "" &&
+            !$(".vegan").is(':checked') &&
+            !$(".vegetarian").is(':checked') &&
+            !$(".gluten_free").is(':checked') &&
+            $(".easy").is(':checked') &&
+            $(".medium").is(':checked') &&
+            $(".hard").is(':checked') &&
+            $("#serves-slider-value-input").val() == "1,6" &&
+            $("#time-slider-value-input").val() == "10,180") {
+                $('.reset-filters').removeClass("active-reset-filters")
+                console.log('true')
+            } else {
+                $('.reset-filters').addClass("active-reset-filters")
+                $('.collapsible-body').css('display', 'block')
+                $('.filter-column li').addClass('active')
+                console.log('false')
+            }
+    }
+    
+    if_default()
+    
+    $(".master-filter").on("change", function() {
+        if_default()
+    })
+    
+    time_slider.noUiSlider.on('set', function() {
+        if_default()
+    });
+    
+    serves_slider.noUiSlider.on('set', function() {
+        if_default()
+    });
+    
+    $('.reset-filters').on('click', function() {
+        $('#ingredients-chips-value-input').val("")
+        $('.vegan').prop('checked', false);
+        $('.vegetarian').prop('checked', false);
+        $('.gluten-free').prop('checked', false);
+        $('.easy').prop('checked', true);
+        $('.medium').prop('checked', true);
+        $('.hard').prop('checked', true);
+        $("#serves-slider-value-input").val("1,6")
+        serves_slider.noUiSlider.set([1,6])
+        $("#time-slider-value-input").val("10,180")
+        time_slider.noUiSlider.set([10,180])
+        
+        var ingredients = M.Chips.getInstance($(".ingredients-chips"))
+        var ingredients_length = ingredients.chipsData.length
+        console.log(ingredients_length)
+        for(i=0; i<ingredients_length; i++) {
+            ingredients.deleteChip(ingredients_length - 1 - i)
+        }
+        if_default()
+    })
+    
+    // Function-if-default - if all values at default, default=true
+    // On master-filter change, run-if-default, apply filter button change color, if default false, reset filters change color
+    // On reset filters click, change all filters to default, default=true
+    
 </script>
 {% endblock %}

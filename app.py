@@ -136,7 +136,7 @@ class Ingredients(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     # Removed unique, still need to db.create_all()
     name = db.Column(db.String(80), nullable=False)
-    unit = db.Column(db.String(80), nullable=False)
+    unit = db.Column(db.String(80), nullable=True)
     amount = db.Column(db.Integer, nullable=False)
     is_vegetarian = db.Column(db.Boolean, nullable=False)
     is_vegan = db.Column(db.Boolean, nullable=False)
@@ -173,7 +173,7 @@ def search_post():
         difficulty_type = request.form.getlist('difficulty-type')
         serves_value = request.form["serves-value"]
         time_value = request.form["time-value"]
-        ingredients_value = request.form["ingredients-value"]
+        ingredients_value = request.form["ingredients-value"].lower()
     except KeyError:
         recipe_type = []
         difficulty_type = [u'easy', u'medium', u'hard']
@@ -256,7 +256,7 @@ def search_get():
             temp_allergy[allergy] = allergy_res[0][0]
         allergy_info[recipe] = temp_allergy
     
-
+    print(pagination_num)
     return render_template('search.html', allergy_info=allergy_info, result=result, search_term=search_term, pagination_num=pagination_num, page=page) 
 
 @app.route('/')
@@ -281,7 +281,7 @@ def index():
     
     # Altering the homepage 
     allergies = ['is_gluten_free','is_vegan','is_vegetarian']
-    featured_recipes_ids = [5, 6, 9, 10]
+    featured_recipes_ids = [53, 52, 9, 10]
     featured_recipes = []
     allergy_info = {}
 
@@ -576,6 +576,7 @@ def update_recipe_submit(recipe_id):
 def recipe(recipe_name, recipe_id):
 
     recipe_result = Recipe.query.filter_by(id=recipe_id).first()
+    ingredients_result = recipe_result.ingredients.all()
     
     # Will need to change to try
     if "username" in session:
@@ -592,11 +593,33 @@ def recipe(recipe_name, recipe_id):
             recipe_result.views = recipe_result.views + 1
             db.session.commit()
             
-
+    allergies = ['is_gluten_free','is_vegan','is_vegetarian']
+    allergy_info = {}
     
-    recipe_result = Recipe.query.filter_by(id=recipe_id).first()
+    temp_allergy = {}
+    for allergy in allergies:
+        allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe_result.id, allergy)).fetchall()
+        allergy_info[allergy] = allergy_res[0][0]
     
-    return render_template('recipe.html', recipe_result=recipe_result)
+    recipe_result_name_list = recipe_result.name.split(' ')
+    print(recipe_result_name_list)
+    
+    related_recipe_result = []
+    
+    for word in recipe_result_name_list:
+        temp_related = Recipe.query.filter(Recipe.name.like("%" + word + "%")).filter(Recipe.id != recipe_result.id)
+        for temp_result in temp_related:
+            if len(related_recipe_result) > 2:
+                break
+            if not temp_related in related_recipe_result:
+                # Does this if work?
+                related_recipe_result.append(temp_result)
+        
+    # related_recipes = []
+    # while related_recipes > 3:
+        
+    
+    return render_template('recipe.html', related_recipe_result=related_recipe_result, recipe_result=recipe_result, ingredients_result=ingredients_result, allergy_info=allergy_info)
     
 @app.route('/search', methods=['POST', 'GET'])
 def search():
