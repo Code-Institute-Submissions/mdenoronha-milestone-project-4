@@ -4,12 +4,12 @@
     <img class="recipe-image" src="{{ url_for('static', filename='imgs/background-image.png') }}" alt="{{recipe_result.name}}">
     </img>
     <!--<img class="recipe-image" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe_result.image_file}}" alt="{{recipe_result.name}}"></img>-->
-    <h2 class="bottom-left">Chicken Cous Cous with Red Wine Reduction</h2>
+    <h2 class="bottom-left">{{recipe_result.name}}</h2>
     <!--<h2 class="bottom-left">{{recipe_result.name}}</h2>-->
 </div>
 
 <div class="recipe-page-info row">
-    <div class="card col m8 s11">
+    <div class="card col m8 s12">
         <div class="card-content not-last recipe-info">
             <p><span class="bold-text">SERVES</span><br>{{recipe_result.serves}}</p>
         </div>
@@ -21,17 +21,25 @@
         </div>
         <hr>
         <div class="card-content not-last recipe-info">
-        <!--Need to fix allergy logic-->
+            {% if allergy_info['is_vegetarian'] == 1 %}
+            <p class="active-allergy vegetarian">VEGETARIAN</p>
+            {% else %}
             <p class="inactive-allergy"><strike>VEGETARIAN</strike></p>
-
+            {% endif %}
         </div>
         <div class="card-content not-last recipe-info">
+            {% if allergy_info['is_vegan'] == 1 %}
             <p class="active-allergy vegan">VEGAN</p>
-
+            {% else %}
+            <p class="inactive-allergy"><strike>VEGAN</strike></p>
+            {% endif %}
         </div>
         <div class="card-content recipe-info">
+            {% if allergy_info['is_gluten_free'] == 1 %}
             <p class="active-allergy gluten-free">GLUTEN FREE</p>
-
+            {% else %}
+            <p class="inactive-allergy"><strike>GLUTEN FREE</strike></p>
+            {% endif %}
         </div>
     </div>
     <div class="view-counter-container col m4 s12">
@@ -47,38 +55,36 @@
     <div class="col s12 m4 l4">
         <ul class="ingredient-list">
             <h3>Ingredients</h3>
-            <li>1KG Chicken Breast</li>
-            <li>1KG Chicken Breast</li>
-            <li>1KG Chicken Breast</li>
-            <li>1KG Chicken Breast</li>
-            <li>1KG Chicken Breast</li>
+            {% for ingred in ingredients_result %}
+            <li>{{ingred.amount}} {{ingred.unit[0]|upper}}{{ingred.unit[1:]}} {{ingred.name[0]|upper}}{{ingred.name[1:]}}</li>
+            {% endfor %}
         </ul>
     </div>
     <div class="related-recipes-container col s12 m12 l3">
         <h5>Related Recipes</h5>
         <div class="card-container">
-            <a href="recipe/{{recipe_result.name | replace(" ", "- ")}}/{{recipe_result.id}}">
+            {% for related_recipe in related_recipe_result %}
+            <a href="{{url_for('recipe', recipe_name=related_recipe.name | replace(" ", "- "), recipe_id=related_recipe.id)}}">
                 <div class="card">
                     <div class="card-image">
-                        <img class="recipe-image" src="{{ url_for('static', filename='imgs/background-image.png') }}" alt="{{recipe_result.name}}"></img>
-                        <!--<img class="recipe-image med" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe_result.image_file}}" alt="{{recipe_result.name}}"></img>-->
+                        <img class="recipe-image" src="{{ url_for('static', filename='imgs/background-image.png') }}" alt="{{related_recipe.name}}"></img>
+                        <!--<img class="recipe-image med" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{related_recipe.image_file}}" alt="{{related_recipe.name}}"></img>-->
                     </div>
                     <div class="card-content recipe-title">
-                        <p>{{recipe_result.name}}</p>
+                        <p>{{related_recipe.name}}</p>
                     </div>
                     <div class="card-content not-last recipe-info">
-                        <p><span class="bold-text">SERVES</span><br>{{recipe_result.serves}}</p>
+                        <p><span class="bold-text">SERVES</span><br>{{related_recipe.serves}}</p>
                     </div>
                     <div class="card-content not-last recipe-info">
-                        <p><span class="bold-text">DIFFICULTY</span><br> {{ recipe_result.difficulty[0]|upper}}{{recipe_result.difficulty[1:] }}</p>
+                        <p><span class="bold-text">DIFFICULTY</span><br> {{ related_recipe.difficulty[0]|upper}}{{related_recipe.difficulty[1:] }}</p>
                     </div>
                     <div class="card-content recipe-info">
-                        <p><span class="bold-text">TIME</span><br>{{recipe_result.time}} Mins</p>
+                        <p><span class="bold-text">TIME</span><br>{{related_recipe.time}} Mins</p>
                     </div>
                     <hr>
 
                     <div class="card-content not-last recipe-info">
-
                         <p class="inactive-allergy"><strike>VEGETARIAN</strike></p>
 
                     </div>
@@ -91,10 +97,45 @@
 
                     </div>
                 </div>
-
+            </a>
+            {% endfor %}
         </div>
-        </a>
     </div>
 </div>
 
+
+{% if user %} {% if user.id == recipe_result.user_id %}
+<div class="fixed-action-btn">
+    <a class="btn-floating btn-large">
+    <i class="large material-icons recipe-blue">build</i>
+  </a>
+    <ul>
+        <li><a href="#delete-modal" class="btn-floating modal-trigger"><i class="material-icons recipe-red">delete_forever</i></a></li>
+        <li><a href="{{url_for('update_recipe_info', recipe_id=recipe_result.id)}}" class="btn-floating"><i class="material-icons recipe-green">edit</i></a></li>
+    </ul>
+</div>
+{% endif %} {% endif %}
+
+<div id="delete-modal" class="modal">
+    <div class="modal-content">
+        <h4>Delete Recipe</h4>
+        <p>Are you sure you wish to delete {{recipe_result.name}}? This is a permenant action and cannot be reversed.</p>
+    </div>
+    <div class="modal-footer">
+        <a href="#!" class="modal-close btn-flat">Cancel</a>
+        <a href="{{url_for('delete_recipe', recipe_id=recipe_result.id)}}" class="modal-close btn-flat">Delete</a>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+
+<script>
+
+    $(document).ready(function() {
+        $('.fixed-action-btn').floatingActionButton();
+        $('.modal').modal();
+    });
+</script>
 {% endblock %}

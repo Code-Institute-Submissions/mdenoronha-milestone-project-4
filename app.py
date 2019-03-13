@@ -299,6 +299,31 @@ def index():
 
     return render_template('index.html',recipe_object=recipe_object, featured_recipes=featured_recipes, allergy_info=allergy_info)
     
+@app.route('/delete/<recipe_id>')
+def delete_recipe(recipe_id):
+    
+    if not session:
+        return redirect(url_for('index'))
+        
+    if not 'username' in session:
+        return redirect(url_for('index'))
+        
+    user = User.query.filter_by(username=session["username"]).first()
+    
+    recipe = Recipe.query.filter_by(id=recipe_id).first()
+    
+    if user.id != recipe.user_id:
+        return redirect(url_for('account_my_recipes'))
+    
+    Recipe.query.filter_by(id=recipe_id).delete()
+    
+    db.session.commit()
+    
+    delete_str = "DELETE FROM recipe_ingredients WHERE recipe_id = %s ;" % recipe_id
+    db.engine.execute(delete_str)
+
+    return redirect(url_for('account_my_recipes'))
+    
 @app.route('/add-recipe/info', methods=['POST', 'GET'])
 def add_recipe_info():
     
@@ -577,7 +602,7 @@ def recipe(recipe_name, recipe_id):
 
     recipe_result = Recipe.query.filter_by(id=recipe_id).first()
     ingredients_result = recipe_result.ingredients.all()
-    
+    user = []
     # Will need to change to try
     if "username" in session:
 
@@ -619,7 +644,7 @@ def recipe(recipe_name, recipe_id):
     # while related_recipes > 3:
         
     
-    return render_template('recipe.html', related_recipe_result=related_recipe_result, recipe_result=recipe_result, ingredients_result=ingredients_result, allergy_info=allergy_info)
+    return render_template('recipe.html', user=user, related_recipe_result=related_recipe_result, recipe_result=recipe_result, ingredients_result=ingredients_result, allergy_info=allergy_info)
     
 @app.route('/search', methods=['POST', 'GET'])
 def search():
@@ -681,25 +706,12 @@ def search():
 @app.route('/account/my-recipes', methods=['POST', 'GET'])
 def account_my_recipes():
 
-    page = request.args.get('page', 1, type=int)
-    
     user = User.query.filter_by(username=session['username']).first()
     
-    result = (Recipe.query
-        .filter_by(user_id=user.id)
-        .order_by(Recipe.views.desc())
-        .paginate(page, 15, False))
-    total_pages = result.pages
+    all_recipes = Recipe.query.filter_by(user_id=user.id).with_entities(Recipe.name, Recipe.id).order_by(Recipe.views.desc()).all()
 
-    total_pages = result.pages
-    pagination_num = create_pagination_num(total_pages, page)
-        # Assistance on pagination from https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-ix-pagination
-    next_url = url_for('search', page=result.next_num) \
-    if result.has_next else None
-    prev_url = url_for('search', page=result.prev_num) \
-    if result.has_prev else None
     
-    return render_template('account_my_recipes.html', result=result, next_url=next_url, prev_url=prev_url, pagination_num=pagination_num, page=page)
+    return render_template('account_my_recipes.html', all_recipes=all_recipes)
     
 @app.route('/register', methods=['POST', 'GET'])
 def register():
