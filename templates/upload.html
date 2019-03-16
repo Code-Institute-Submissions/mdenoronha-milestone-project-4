@@ -1,65 +1,118 @@
 {% extends 'base.html' %} {% block content %}
 
-<h1>Upload a file</h1>
+<h1 class="add-recipe-title">Add a Recipe</h1>
 
+<div class="container stage-tracker">
+    <a href="{{url_for('add_recipe_info')}}" class="btn-floating"><i class="material-icons">local_dining</i></a>
+    <a class="btn-floating disabled"><i class="material-icons">local_grocery_store</i></a>
+    <a class="btn-floating disabled"><i class="material-icons">add</i></a>
+</div>
+<div class="container stage-tracker">
+        <p>Recipe Info</p>
+        <p>Ingredients</p>
+        <p>Submit</p>
+</div>
 
-<form method="POST" enctype="multipart/form-data">
-    <p>
-        <div class="input-field col s6">
-            <!--Recipe Name-->
-            <div>
-                <input placeholder="Chicken Carbonara" name="dish_name" id="name" type="text" class="validate">
-                <label for="name">Dish Name</label>
-            </div>
-            Serves
-            <div>
-                <select name="serves">
-              <option value="" disabled selected>Choose your option</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="3">4</option>
+<div class="container form-container add-recipe-container">
+    <form method="POST" enctype="multipart/form-data">
+        <!--Recipe Name-->
+        <div class="input-field">
+            <input  required placeholder="Chicken Carbonara" name="dish_name" id="name" type="text" class="validate" {% if "added_recipe" in session %} value="{{session["added_recipe"]["name"] }}"{% endif %}>
+            <label for="name">Dish Name</label>
+        </div>
+        <div class="input-field serves">
+            <select name="serves" required>
+                  <option  {% if not "added_recipe" in session %}selected{% endif %} disabled value=""></option>
+                  <option {% if "added_recipe" in session %} {% if session["added_recipe"]["serves"] == 1 %}selected{% endif %}{% endif %} value="1">1</option>
+                  <option {% if "added_recipe" in session %} {% if session["added_recipe"]["serves"] == 2 %}selected{% endif %}{% endif %} value="2">2</option>
+                  <option {% if "added_recipe" in session %} {% if session["added_recipe"]["serves"] == 3 %}selected{% endif %}{% endif %} value="3">3</option>
+                  <option {% if "added_recipe" in session %} {% if session["added_recipe"]["serves"] == 4 %}selected{% endif %}{% endif %} value="4">4</option>
+                </select>
+            <label>Serves</label>
+        </div>
+        <!--Difficulty-->
+        <div class="input-field difficulty">
+            <select required name="difficulty">
+              <option value="" disabled {% if not "added_recipe" in session %}selected{% endif %}></option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["difficulty"] == 'easy' %}selected{% endif %}{% endif %} value="easy">Easy</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["difficulty"] == 'medium' %}selected{% endif %}{% endif %} value="medium">Medium</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["difficulty"] == 'hard' %}selected{% endif %}{% endif %} value="hard">Hard</option>
             </select>
-                <label>Serves</label>
-            </div>
-            <!--Difficulty-->
-            <div>
-                <select name="difficulty">
-              <option value="" disabled selected>Choose your option</option>
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
+            <label>Difficulty</label>
+        </div>
+        <!--Time-->
+        <div class="input-field time">
+            <select required name="time">
+              <option value="" disabled {% if not "added_recipe" in session %}selected{% endif %}></option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '10' %}selected{% endif %}{% endif %} value="10">10 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '20' %}selected{% endif %}{% endif %} value="20">20 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '30' %}selected{% endif %}{% endif %} value="30">30 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '40' %}selected{% endif %}{% endif %} value="40">40 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '50' %}selected{% endif %}{% endif %} value="50">50 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '60' %}selected{% endif %}{% endif %} value="60">60 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '70' %}selected{% endif %}{% endif %} value="70">70 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '80' %}selected{% endif %}{% endif %} value="80">80 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '90' %}selected{% endif %}{% endif %} value="90">90 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '100' %}selected{% endif %}{% endif %} value="100">100 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '110' %}selected{% endif %}{% endif %} value="110">110 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '120' %}selected{% endif %}{% endif %} value="120">120 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '130' %}selected{% endif %}{% endif %} value="130">130 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '140' %}selected{% endif %}{% endif %} value="140">140 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '150' %}selected{% endif %}{% endif %} value="150">150 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '160' %}selected{% endif %}{% endif %} value="160">160 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '170' %}selected{% endif %}{% endif %} value="170">170 min</option>
+              <option {% if "added_recipe" in session %} {% if session["added_recipe"]["time"] == '180' %}selected{% endif %}{% endif %} value="180">180 min</option>
             </select>
-                <label>Difficulty</label>
+            <label>Time</label>
+        </div>
+        <!--Method-->
+        <div class="input-field">
+            <textarea required placeholder="Explain in detail how the recipe is cooked" name="method" id="method-input" class="materialize-textarea">{% if "added_recipe" in session %} {{session["added_recipe"]["method"] }}{% endif %}</textarea>
+            <label for="method-input">Method</label>
+        </div>
+        <!--Add limits to uploads-->
+        <label class="recipe-image-label">Recipe Image</label>
+        <div class="file-field input-field">
+            <div class="btn upload-btn">
+                <span>UPLOAD</span>
+                <input required id="file-input" type="file" name="inputFile">
             </div>
-            <!--Time-->
-            <div>
-                <select name="time">
-              <option value="" disabled selected>Choose your option</option>
-              <option value="10">10 min</option>
-              <option value="20">20 min</option>
-              <option value="30">30 min</option>
-              <option value="40">40 min</option>
-            </select>
-                <label>Time</label>
-            </div>
-            <!--Method-->
-            <div>
-                <textarea name="method" id="method-input" class="materialize-textarea"></textarea>
-                <label for="method-input">Method</label>
-                <!--Add limits to uploads-->
-                <input type=file name=inputFile>
-                
+            <div class="file-path-wrapper">
+                <input class="file-path validate" type="text">
             </div>
         </div>
-       <button>Submit</button>
-</form>
+        <button class="btn">NEXT</button>
+    </form>
+</div>
 <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
 
 <script>
     $(document).ready(function() {
         $('select').formSelect();
     });
+
+    $('select[name="serves"]').on('change', function() {
+        $('.input-field.serves input').addClass('valid-input')
+        $('.input-field.serves label').addClass('valid-label')
+    })
+
+    $('select[name="difficulty"]').on('change', function() {
+        $('.input-field.difficulty input').addClass('valid-input')
+        $('.input-field.difficulty label').addClass('valid-label')
+    })
+
+    $('select[name="time"]').on('change', function() {
+        $('.input-field.time input').addClass('valid-input')
+        $('.input-field.time label').addClass('valid-label')
+    })
+
+    $('textarea').on('change', function() {
+        $(this).addClass('valid')
+    })
+
+    $('input[type="file"]').on('change', function() {
+        $('.recipe-image-label').addClass('valid-label')
+    })
 </script>
 
 {% endblock %}

@@ -762,6 +762,13 @@ def login_user():
         return redirect(url_for('index'))
     else: 
         return redirect(url_for('login'))
+        
+@app.route('/logout')
+def logout():
+    
+    session.clear()
+
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(host=os.environ.get('IP'),

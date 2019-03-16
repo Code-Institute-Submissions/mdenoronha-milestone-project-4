@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!--NoUISlider only for certain pages?-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/13.1.1/nouislider.css" type="text/css" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Dosis:400,700" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" type="text/css" />
@@ -25,10 +27,11 @@
         <li><a href="{{ url_for('account_my_recipes') }}">RECIPES</a></li>
         <li><a href="{{ url_for('account_my_recipes') }}">INGREDIENTS</a></li>
         {% if session['username'] %} 
-        <li><a class="waves-effect waves-light btn" href="{{ url_for('account_my_recipes') }}">ACCOUNT</a></li>
+        <li><a class="btn" href="{{ url_for('account_my_recipes') }}">ACCOUNT</a></li>
+        <li><a class="btn modal-trigger" href="#logout-modal">LOGOUT</a></li>
         {% else %} 
-        <li><a class="waves-effect waves-light btn" href="{{ url_for('register') }}">REGISTER</a></li>
-        <li><a class="waves-effect waves-light btn" href="{{ url_for('login') }}">LOGIN</a></li>
+        <li><a class="btn" href="{{ url_for('register') }}">REGISTER</a></li>
+        <li><a class="btn" href="{{ url_for('login') }}">LOGIN</a></li>
         {% endif %}
       </ul>
     </div>
@@ -41,12 +44,27 @@
         <li class="divider"></li>
         {% if session['username'] %} 
         <li><a href="{{ url_for('account_my_recipes') }}">ACCOUNT</a></li>
+        <li><a class="model-trigger" href="#logout-modal">LOGOUT</a></li>
         {% else %} 
         <li><a href="{{ url_for('register') }}">REGISTER</a></li>
         <li><a href="{{ url_for('login') }}">LOGIN</a></li>
         {% endif %}
   </ul>
     
+    
+  
+<div id="logout-modal" class="modal">
+    <div class="modal-content">
+        <h4>Log Out</h4>
+        <p>Are you sure you wish to log out? Any unsaved changes will be lost.</p>
+    </div>
+    <div class="modal-footer">
+        <a href="#!" class="modal-close btn-flat">Cancel</a>
+        <a href="{{url_for('logout')}}" class="modal-close btn-flat">Log Out</a>
+    </div>
+</div>
+         
+
     {% block content %} {% endblock %}
     
     <footer class="page-footer">
@@ -77,6 +95,9 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        $('.modal').modal();
+    </script>
 </body>
 
 </html>

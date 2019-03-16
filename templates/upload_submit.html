@@ -1,33 +1,79 @@
 {% extends 'base.html' %} {% block content %}
 
-<h1>Submit Recipe</h1>
 
-{% for k, v in added_recipe.items() %}
+<div class="recipe-header">
+    <img class="recipe-image" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{added_recipe['image_file_url']}}" alt="{{added_recipe['name']}}"></img>
+    <h2 class="bottom-left">{{added_recipe['name']}}</h2>
+</div>
 
-{% if k != "image_file_url" %}
-<p><strong>{{k}}</strong></p>
-<p>{{v}}</p>
-{% else %}
-<img src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{v}}"></img>
-{% endif %}
+<div class="recipe-page-info row">
+    <div class="card col m8 s12">
+        <div class="card-content not-last recipe-info">
+            <p><span class="bold-text">SERVES</span><br>{{added_recipe['serves']}}</p>
+        </div>
+        <div class="card-content not-last recipe-info">
+            <p><span class="bold-text">DIFFICULTY</span><br>{{added_recipe['difficulty'][0]|upper}}{{added_recipe['difficulty'][1:]}}</p>
+        </div>
+        <div class="card-content recipe-info">
+            <p><span class="bold-text">TIME</span><br>{{added_recipe['time']}} Mins</p>
+        </div>
+        <hr>
+        <div class="card-content not-last recipe-info">
+            {% if allergy_info['is_vegetarian'] %}
+            <p class="active-allergy vegetarian">VEGETARIAN</p>
+            {% else %}
+            <p class="inactive-allergy"><strike>VEGETARIAN</strike></p>
+            {% endif %}
+        </div>
+        <div class="card-content not-last recipe-info">
+            {% if allergy_info['is_vegan'] %}
+            <p class="active-allergy vegan">VEGAN</p>
+            {% else %}
+            <p class="inactive-allergy"><strike>VEGAN</strike></p>
+            {% endif %}
+        </div>
+        <div class="card-content recipe-info">
+            {% if allergy_info['is_gluten_free'] %}
+            <p class="active-allergy gluten-free">GLUTEN FREE</p>
+            {% else %}
+            <p class="inactive-allergy"><strike>GLUTEN FREE</strike></p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="view-counter-container col m4 s12">
+        <a class="btn view-count">0<i class="material-icons left">remove_red_eye</i></a>
+    </div>
+</div>
 
-{% endfor %}
+<div class="row">
+    <div class="method-container col s12 m8">
+        <h3>Method</h3>
+        {{added_recipe['method']}}
+    </div>
+    <div class="col s12 m4">
+        <ul class="ingredient-list">
+            <h3>Ingredients</h3>
+            {% for k, ingred in added_recipe_ingredients.items() %}
+            <li>{{ingred["amount"]}} 
+            {% if ingred["unit"] %}
+            {{ingred["unit"][0]|upper}}{{ingred["unit"][1:]}} 
+            {% endif %}
+            {{ingred["ingred"][0]|upper}}{{ingred["ingred"][1:]}}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
 
+<div class="fixed-message">
+    <p>This is a preview of your added recipe. If everything looks good, click submit</p>
+    <div class="fixed-message-options">
+    <a href="{{url_for('add_recipe_ingredients')}}"><p class="underline">GO BACK</p></a>
+    <form method="POST" enctype="multipart/form-data">
+        <button class="btn">SUBMIT</button>
+    </form>
+    </div>
+</div>
 
-{% for res in added_recipe_ingredients.items() %}
-
-<!--Why does 1 work? Does it work with more than 2 ingredients?-->
-<p>{{res[1]["ingred"]}}</p>
-<p>{{res[1]["amount"]}} {{res[1]["unit"]}}</p>
-<p>Is Vegetarian: {{res[1]["is_vegetarian"]}}</p>
-<p>Is Vegan: {{res[1]["is_vegan"]}}</p>
-<p>Is Gluten Free: {{res[1]["is_gluten_free"]}}</p>
-
-{% endfor %}
-
-<form method="POST" enctype="multipart/form-data">
-    <button>Add Recipe</button>
-</form>
 
 <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
 

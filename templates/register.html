@@ -1,37 +1,40 @@
 {% extends 'base.html' %} {% block content %}
 
-<div class="row">
-    <div class="input-field col s12">
-        <form method="POST" class="register-form" action="/register_user" enctype="multipart/form-data" autocomplete="off">
-            <div class="row">
-                <div class="input-field col s12">
-                    <input name="first_name" id="first_name" type="text" class="validate" required>
-                    <label for="first_name">First Name</label>
+<h1 class="form-heading">Start Your Culinary Journey</h1>
+<div class="container form-container">
+    <div class="row">
+        <h4>Register</h4>
+    </div>
+    <div class="row">
+        <div class="input-field col s12">
+            <form method="POST" class="register-form" action="/register_user" enctype="multipart/form-data" autocomplete="off">
+                <div class="row">
+                    <div class="input-field col s12">
+                        <input name="first_name" id="first_name" type="text" placeholder="Fred" class="validate" required>
+                        <label for="first_name">First Name</label>
+                    </div>
+                    <div class="input-field col s12">
+                        <input name="last_name" id="last_name" type="text" placeholder="Smith" class="validate" required>
+                        <label for="last_name">Last Name</label>
+                    </div>
+                    <div class="input-field col s12">
+                        <input name="username" id="username" type="text" placeholder="fred2234" class="validate" required>
+                        <label for="username">Username</label>
+                    </div>
+                    <div class="input-field col s12">
+                        <input name="password" id="password" type="password" placeholder=" " class="validate" required>
+                        <label for="password">Password</label>
+                        <p>Secure User Authentication is Not Used. Do Not Enter Sensitive Passwords</p>
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="input-field col s12">
-                    <input name="last_name" id="last_name" type="text" class="validate" required>
-                    <label for="last_name">Last Name</label>
+                <div class="row">
+                    <button class="btn">Submit</button>
                 </div>
-            </div>
-            <div class="row">
-                <div class="input-field col s12">
-                    <input name="username" id="username" type="text" class="validate" required>
-                    <label for="username">Username</label>
-                </div>
-            </div>
-            <div class="row">
-                <div class="input-field col s12">
-                    <input name="password" id="password" type="password" class="validate" required>
-                    <label for="password">Password</label>
-                </div>
-            </div>
-            <div class="row">
-                <button>Submit</button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
-
+<div class="form-message row">
+    <p>Already a Member? <a class="underline" href="{{url_for('login')}}">Login</a></p>
+</div>
 {% endblock %}

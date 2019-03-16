@@ -1,0 +1,235 @@
+{% extends 'base.html' %} {% block content %}
+
+
+
+<div class="row">
+    <div class="input-field col s12">
+        <form method="POST" class="search-bar" action="/testing" enctype="multipart/form-data" autocomplete="off">
+            <input type="text" name="search"> {% if search_term %}
+            <h4>Search: {{search_term}}</h4>
+            {% endif %}
+            <label>
+                <input type="checkbox" name="recipe-type" value="vegetarian" class="filled-in vegetarian"/>
+                <span>Vegetarian</span>
+              </label>
+            <label>
+                <input type="checkbox" name="recipe-type" value="vegan" class="filled-in vegan" />
+                <span>Vegan</span>
+            </label>
+            <label>
+                <input type="checkbox" name="recipe-type" value="gluten-free" class="filled-in gluten-free"/>
+                <span>Gluten Free</span>
+            </label>
+            <label>
+                <input type="checkbox" name="difficulty-type" value="easy" class="filled-in easy" checked/>
+                <span>Easy</span>
+            </label>
+            <label>
+                <input type="checkbox" name="difficulty-type" value="medium" class="filled-in medium" checked/>
+                <span>Medium</span>
+            </label>
+            <label>
+                <input type="checkbox" name="difficulty-type" value="hard" class="filled-in hard" checked/>
+                <span>Hard</span>
+            </label>
+            <!--https://codepen.io/anon/pen/mxXYBK-->
+            <input name="serves-value" id="serves-slider-value-input" type="hidden" value="">
+
+            <div id="serves-slider"></div>
+            <div><span id="serves-slider-value"></span> People</div>
+
+            <input name="time-value" id="time-slider-value-input" type="hidden" value="">
+
+            <div id="time-slider"></div>
+            <div><span id="time-slider-value"></span> Mins</div>
+            
+            <input name="ingredients-value" id="ingredients-chips-value-input" type="hidden" value="">
+            
+            <div class="ingredients-chips">
+            </div>
+            <p class="hidden ingredient-warning-message">Only alphabetical characters can be searched for</p>
+            
+            <button>Submit</button>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    {% for recipe in result.items %}
+    <div class="col s12 m5">
+        <div class="card-container">
+            <a href="recipe/{{recipe.name | replace(" ", "- ")}}/{{recipe.id}}">
+                <div class="card">
+                    <div class="card-image">
+                        <img class="recipe-image" src="{{ url_for('static', filename='imgs/background-image.png') }}" alt="{{recipe.name}}"></img>
+                        <!--<img class="recipe-image med" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe.image_file}}" alt="{{recipe.name}}"></img>-->
+                    </div>
+                    <div class="card-content recipe-title">
+                        <p>{{recipe.name}}</p>
+                    </div>
+                    <div class="card-content not-last recipe-info">
+                        <p><span class="bold-text">SERVES</span><br>{{recipe.serves}}</p>
+                    </div>
+                    <div class="card-content not-last recipe-info">
+                        <p><span class="bold-text">DIFFICULTY</span><br> {{ recipe.difficulty[0]|upper}}{{recipe.difficulty[1:] }}</p>
+                    </div>
+                    <div class="card-content recipe-info">
+                        <p><span class="bold-text">TIME</span><br>{{recipe.time}} Mins</p>
+                    </div>
+                    <hr> {% if not allergy_info == None %}
+                    <div class="card-content not-last recipe-info">
+                        {% if allergy_info[recipe.id]['is_vegetarian'] == 1 %}
+                        <p class="active-allergy vegetarian">VEGETARIAN</p>
+                        {% else %}
+                        <p class="inactive-allergy"><strike>VEGETARIAN</strike></p>
+                        {% endif %}
+                    </div>
+                    <div class="card-content not-last recipe-info">
+                        {% if allergy_info[recipe.id]['is_vegan'] == 1 %}
+                        <p class="active-allergy vegan">VEGAN</p>
+                        {% else %}
+                        <p class="inactive-allergy"><strike>VEGAN</strike></p>
+                        {% endif %}
+                    </div>
+                    <div class="card-content recipe-info">
+                        {% if allergy_info[recipe.id]['is_gluten_free'] == 1 %}
+                        <p class="active-allergy gluten-free">GLUTEN FREE</p>
+                        {% else %}
+                        <p class="inactive-allergy"><strike>GLUTEN FREE</strike></p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+
+<ul class="pagination">
+{% for li in pagination_num %} {% if li == page %}
+    <li class="active"><a href="?page={{li}}">{{li}}</a></li>
+    {% else %}
+    <li class="waves-effect"><a href="?page={{li}}">{{li}}</a></li>
+    {% endif %} {% endfor %}
+</ul>
+
+<!--For slider-->
+<script src='https://cdnjs.cloudflare.com/ajax/libs/wnumb/1.0.4/wNumb.min.js'></script>
+<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/13.1.1/nouislider.js"></script>
+
+
+<script>
+    // use jQuery selectors
+    var serves_slider_noUiSlider = noUiSlider.create($('#serves-slider')[0], {
+        start: [1, 6],
+        connect: true,
+        step: 1,
+        range: {
+            'min': 1,
+            'max': 6
+        },
+        ariaFormat: wNumb({
+            decimals: 0
+        }),
+        format: wNumb({
+            decimals: 0,
+
+        })
+    });
+
+    $("#serves-slider-value-input").val(serves_slider_noUiSlider.get());
+
+    serves_slider_noUiSlider.on("change", function() {
+        $("#serves-slider-value-input").val(serves_slider_noUiSlider.get());
+    });
+
+    var serves_slider = $('#serves-slider')[0];
+    var serves_slider_value = $('#serves-slider-value')[0];
+
+    serves_slider.noUiSlider.on('update', function(values) {
+        serves_slider_value.innerHTML = values.join(' - ');
+    });
+
+    var time_slider_noUiSlider = noUiSlider.create($('#time-slider')[0], {
+        start: [10, 180],
+        connect: true,
+        step: 10,
+        range: {
+            'min': 10,
+            'max': 180
+        },
+        ariaFormat: wNumb({
+            decimals: 0
+        }),
+        format: wNumb({
+            decimals: 0,
+
+        })
+    });
+
+    $("#time-slider-value-input").val(time_slider_noUiSlider.get());
+
+    time_slider_noUiSlider.on("change", function() {
+        $("#time-slider-value-input").val(time_slider_noUiSlider.get());
+    });
+
+    var time_slider = $('#time-slider')[0];
+    var time_slider_value = $('#time-slider-value')[0];
+
+    time_slider.noUiSlider.on('update', function(values) {
+        time_slider_value.innerHTML = values.join(' - ');
+    });
+    
+    function update_ingredients_input() {
+        var ingredients_chips_instance = M.Chips.getInstance($('.ingredients-chips'));
+        var chips = [];
+        for(key in ingredients_chips_instance.chipsData) {
+                    var value = ingredients_chips_instance.chipsData[key]['tag'];
+                    chips.push(value)
+        }
+        $('#ingredients-chips-value-input').val(chips)
+    }
+    
+    $('.ingredients-chips').chips({
+        placeholder: 'e.g. Chicken',
+        // Syntax below is wrong, improve?
+        onChipAdd: function() {
+            var ingredients_chips_instance = M.Chips.getInstance($('.ingredients-chips'))
+            var ingredients_chips_object = ingredients_chips_instance.chipsData
+            
+            $(".ingredient-warning-message").addClass('hidden')
+            
+            for(key in ingredients_chips_object) {
+                    var value = ingredients_chips_object[key]['tag'];
+                    if (/[^a-zA-Z]/.test(value)) {
+                        ingredients_chips_instance.deleteChip(key);
+                        $(".ingredient-warning-message").removeClass('hidden')
+                    }
+                    
+            }
+            update_ingredients_input()
+        },
+        onChipDelete: function() {
+            update_ingredients_input()
+        }
+    });
+    
+
+
+    $(".vegan").change(function() {
+        if (this.checked) {
+            $(".vegetarian").prop("checked", true)
+        }
+    })
+
+    $(".vegetarian").change(function() {
+        if ($(".vegan").is(':checked')) {
+            $(".vegan").prop("checked", false)
+        }
+    })
+</script>
+{% endblock %}

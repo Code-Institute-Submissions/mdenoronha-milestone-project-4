@@ -2,8 +2,6 @@
         
 
 <div class="background-image">
-    <div class="black-overlay hidden">
-    </div>
     <div class="search-bar row">
         <div class="input-field col s12">
             <h2>SEARCH RECIPES</h2>
@@ -74,13 +72,13 @@
 <div class="hide-on-small-only row allergy-links">
     <h2>Special Diets</h2>
     <div class="col s12 m4">
-        <a class="carousel-item" href="/search"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan-link.png') }}" alt="vegan recipes"><div class="allergy-text med">Gluten Free</div></img></a>
+        <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='gluten-free')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/gluten-free.jpg') }}" alt="gluten free recipes"><div class="allergy-text med">Gluten Free</div></img></a>
     </div>
     <div class="col s12 m4">
-        <a class="carousel-item" href="/search"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan-link.png') }}" alt="vegetarian recipes"><div class="allergy-text med">Gluten Free</div></img></a>
+        <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='vegan')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan.jpg') }}" alt="vegan recipes"><div class="allergy-text med">Vegan</div></img></a>
     </div>
     <div class="col s12 m4">
-        <a class="carousel-item" href="/search"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan-link.png') }}" alt="gluten free recipes"><div class="allergy-text med">Gluten Free</div></img></a>
+        <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='vegetarian')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegetarian.jpg') }}" alt="vegetarian recipes"><div class="allergy-text med">Vegetarian</div></img></a>
     </div>
 </div>
 
@@ -88,9 +86,9 @@
         <h2>Special Diets</h2>
     </div>
 <div class="show-on-small hide-on-med-and-up carousel">
-    <a class="carousel-item" href="/search"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan-link.png') }}" alt="gluten free recipes"></img><div class="allergy-text">Gluten Free</div></a>
-    <a class="carousel-item" href="/search"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan-link.png') }}" alt="vegetarian recipes"></img><div class="allergy-text">Gluten Free</div></a>
-    <a class="carousel-item" href="/search"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan-link.png') }}" alt="vegan recipes"></img><div class="allergy-text">Gluten Free</div></a>
+    <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='gluten-free')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/gluten-free.jpg') }}" alt="gluten free recipes"></img><div class="allergy-text">Gluten Free</div></a>
+    <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='vegan')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegetarian.jpg') }}" alt="vegetarian recipes"></img><div class="allergy-text">Vegan</div></a>
+    <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='vegetarian')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan.jpg') }}" alt="vegan recipes"></img><div class="allergy-text">Vegetarian</div></a>
   </div>
 
   
@@ -101,8 +99,7 @@
     <script>
         // Autocomplete functionality
         var elem = $(".autocomplete")
-
-        
+    
         $('.autocomplete').on('input',function(){
             if($(this).val() != ""){
                 $('.search-button').addClass('active-button')
@@ -116,7 +113,7 @@
         $("body").on('DOMSubtreeModified', elem, function() {
             if($('ul.autocomplete-content li').length >= 1) {
                 if($('ul.autocomplete-content p:first').attr("id") != "featured-heading") {
-                    $('.autocomplete-content').prepend('<p class="unselectable" id="featured-heading">POPULAR RECIPES</p>')
+                    $('.autocomplete-content').prepend('<p class="unselectable" id="featured-heading">MOST POPULAR RECIPES</p>')
                 }
                 
             }

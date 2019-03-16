@@ -1,25 +1,33 @@
 {% extends 'base.html' %} {% block content %}
 
-<div class="row">
-    <div class="input-field col s12">
-        <form method="POST" class="register-form" action="/login_user" enctype="multipart/form-data" autocomplete="off">
-            <div class="row">
-                <div class="input-field col s12">
-                    <input name="username" id="username" type="text" class="validate" required>
-                    <label for="username">Username</label>
+<h1 class="form-heading">Jump Back In</h1>
+<div class="container form-container">
+    <div class="row">
+        <h4>Login</h4>
+    </div>
+    <div class="row">
+        <div class="input-field col s12">
+            <form method="POST" class="register-form" action="/login_user" enctype="multipart/form-data" autocomplete="off">
+                <div class="row">
+                    <div class="input-field col s12">
+                        <input name="username" id="username" type="text" class="validate" placeholder="fred2234" required>
+                        <label for="username">Username</label>
+                    </div>
+                    <div class="input-field col s12">
+                        <input name="password" id="password" type="password" placeholder=" " class="validate" required>
+                        <label for="password">Password</label>
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="input-field col s12">
-                    <input name="password" id="password" type="password" class="validate" required>
-                    <label for="password">Password</label>
+                <div class="row">
+                    <button class="btn">Login</button>
                 </div>
-            </div>
-            <div class="row">
-                <button>Submit</button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
+<div class="form-message row">
+    <p>Not a Member? <a class="underline" href="{{url_for('register')}}">Register</a></p>
+</div>
+
 
 {% endblock %}

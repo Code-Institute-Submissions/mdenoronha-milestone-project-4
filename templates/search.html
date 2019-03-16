@@ -1,5 +1,5 @@
 {% extends 'base.html' %} {% block content %}
-<div class="container">
+<div class="container search-page">
 <div class="row">
     <div class="search-page input-field col s12">
             <form method="POST" class="search-bar" action="/search" enctype="multipart/form-data" autocomplete="off">
@@ -107,7 +107,7 @@
     {% for recipe in result.items %}
     <div class="col s12 l6">
         <div class="card-container">
-            <a href="recipe/{{recipe.name | replace(" ", "- ")}}/{{recipe.id}}">
+            <a href="{{url_for('recipe', recipe_name=recipe.name | replace(" ", "-"), recipe_id=recipe.id)}}">
                 <div class="card">
                     <div class="card-image">
                         <img class="search-page recipe-image" src="{{ url_for('static', filename='imgs/background-image.png') }}" alt="{{recipe.name}}"></img>
@@ -283,7 +283,7 @@
             
             for(key in ingredients_chips_object) {
                     var value = ingredients_chips_object[key]['tag'];
-                    if (/[^a-zA-Z]/.test(value)) {
+                    if (/[^a-zA-Z ]/.test(value)) {
                         ingredients_chips_instance.deleteChip(key);
                         $(".ingredient-warning-message").removeClass('hidden')
                     }
