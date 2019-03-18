@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-
-from app import *
-
-
 def mockdata_run():
 
     db.create_all()

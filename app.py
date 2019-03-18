@@ -332,10 +332,9 @@ def search():
     return render_template('search.html', allergy_info=allergy_info, result=result, checkboxes=checkboxes, search_term=search_term, next_url=next_url, prev_url=prev_url, pagination_num=pagination_num, page=page)
     
 app.route('/mockdata')
-def mockdata():
+def mockdata_url():
     mockdata_run()
     return render_template('register.html')
-    
 
 @app.route('/')
 def index():
