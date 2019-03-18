@@ -333,11 +333,11 @@ def search():
     
 app.route('/mockdata')
 def mockdata_url():
-    mockdata_run()
     return render_template('register.html')
 
 @app.route('/')
 def index():
+    mockdata_run()
     # Dealing with ResultProxy help https://kite.com/python/docs/sqlalchemy.engine.result.ResultProxy
     # Average view count
     total_views = db.engine.execute('SELECT SUM(views), COUNT(views) FROM Recipe WHERE views > 0;')
