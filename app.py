@@ -9,6 +9,7 @@ import flask_s3
 import boto3
 import random
 import string
+from mockdata import *
 
 app = Flask(__name__)
 # SQL-Alchemy
@@ -137,7 +138,7 @@ class Ingredients(db.Model):
     # Removed unique, still need to db.create_all()
     name = db.Column(db.String(80), nullable=False)
     unit = db.Column(db.String(80), nullable=True)
-    amount = db.Column(db.Integer, nullable=False)
+    amount = db.Column(db.String(80), nullable=False)
     is_vegetarian = db.Column(db.Boolean, nullable=False)
     is_vegan = db.Column(db.Boolean, nullable=False)
     is_gluten_free = db.Column(db.Boolean, nullable=False)
@@ -157,6 +158,21 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
     
+@app.route('/auto-search/<filter_to_add>')
+def auto_search(filter_to_add):
+    
+    session["filters"] = {
+            'difficulty_type': [u'easy', u'medium', u'hard'], 
+            'recipe_type': [filter_to_add], 
+            'time': [u'10', u'180'], 
+            'serves': [u'1', u'6'], 
+            'ingredients': []
+        }
+        
+    session["search_term"] = ""
+    
+    return redirect(url_for('search_get'))
+
 @app.route('/search', methods=["POST"])
 def search_post():
     
@@ -221,7 +237,6 @@ def search_post():
 @app.route('/search', methods=["GET"])
 def search_get():
     page = request.args.get('page', 1, type=int)
-    
     if "filters" not in session:
         session["filters"] = {
             'difficulty_type': [u'easy', u'medium', u'hard'], 
@@ -258,6 +273,68 @@ def search_get():
     
     print(pagination_num)
     return render_template('search.html', allergy_info=allergy_info, result=result, search_term=search_term, pagination_num=pagination_num, page=page) 
+    
+@app.route('/search', methods=['POST', 'GET'])
+def search():
+    
+    page = request.args.get('page', 1, type=int)
+    
+    checkboxes = [None, None, None]
+    
+    if request.method == "POST":
+        search_term = request.form["search"] 
+        session["search_term"] = search_term
+        
+        recipe_type = request.form.getlist('recipe-type')
+        session["recipe_type"] = recipe_type
+        
+        result = return_search(recipe_type, search_term, 1)
+        next_url = url_for('search', page=result.next_num) \
+        if result.has_next else None
+        prev_url = url_for('search', page=result.prev_num) \
+        if result.has_prev else None
+        
+        total_pages = result.pages
+        pagination_num = create_pagination_num(total_pages, page)
+        
+        allergies = ['is_gluten_free','is_vegan','is_vegetarian']
+        search_recipes = []
+        allergy_info = {}
+        
+        search_recipes_ids = []
+        for res in result.items:
+          search_recipes_ids.append(res.id)
+        
+        for recipe in search_recipes_ids:
+            temp_recipe = Recipe.query.filter_by(id=recipe).first()
+            search_recipes.append(temp_recipe)
+            temp_allergy = {}
+            for allergy in allergies:
+                allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
+                temp_allergy[allergy] = allergy_res[0][0]
+            allergy_info[recipe] = temp_allergy
+        
+
+    else:
+        result = None
+        search_term = None 
+        allergy_info = None
+        next_url = None
+        prev_url = None
+        pagination_num = []
+    
+    
+        # test = Recipe.query.filter(~Recipe.ingredients.any(Ingredients.is_vegan == True))
+        # Check to see if returned recipes have nutritional requirements
+
+    
+    # checkboxes=checkboxes, make session
+    return render_template('search.html', allergy_info=allergy_info, result=result, checkboxes=checkboxes, search_term=search_term, next_url=next_url, prev_url=prev_url, pagination_num=pagination_num, page=page)
+    
+app.route('/mockdata')
+def mockdata():
+    mockdata_run()
+    return
 
 @app.route('/')
 def index():
@@ -271,7 +348,7 @@ def index():
     recipe_dict = {}
     for recipe in recipe_names:
         # recipe_dict.update({recipe.name:recipe.id})
-        recipe_dict.update({recipe.name:recipe.id})
+        recipe_dict.update({recipe.name:""})
     # https://stackoverflow.com/questions/19884900/how-to-pass-dictionary-from-jinja2-using-python-to-javascript
     recipe_object = (json.dumps(recipe_dict)
     .replace(u'<', u'\\u003c')
@@ -281,7 +358,7 @@ def index():
     
     # Altering the homepage 
     allergies = ['is_gluten_free','is_vegan','is_vegetarian']
-    featured_recipes_ids = [53, 52, 9, 10]
+    featured_recipes_ids = [1, 2, 3, 4]
     featured_recipes = []
     allergy_info = {}
 
@@ -327,6 +404,12 @@ def delete_recipe(recipe_id):
 @app.route('/add-recipe/info', methods=['POST', 'GET'])
 def add_recipe_info():
     
+    if not session:
+        return redirect(url_for('register'))
+        
+    if 'username' not in session:
+        return redirect(url_for('register'))
+    
     if request.method == 'POST':
         
         # Add check to see if recipe name has been added before
@@ -344,7 +427,7 @@ def add_recipe_info():
         }
         
         return redirect(url_for('add_recipe_ingredients'))
-    
+        
     return render_template('upload.html')
 
 @app.route('/update-recipe/info/<recipe_id>', methods=['POST', 'GET'])
@@ -404,6 +487,7 @@ def add_recipe_ingredients():
                                           request.form.getlist('amount'),
                                           request.form.getlist('unit'))):
                 
+                
                 is_vegetarian = False
                 is_vegan = False
                 is_gluten_free = False
@@ -418,22 +502,23 @@ def add_recipe_ingredients():
                     is_gluten_free = True
             
                 temp_ingred = {
-                    "ingred": ingred,
-                    "amount": amount,
-                    "unit": unit,
+                    "ingred": ingred.lower(),
+                    "amount": amount.lower(),
+                    "unit": unit.lower(),
                     "is_vegetarian" : is_vegetarian,
                     "is_vegan" : is_vegan,
                     "is_gluten_free" : is_gluten_free
                 }
                 session["added_recipe_ingredients"][counter] = temp_ingred
     
-                
 
         return redirect(url_for('add_recipe_submit'))
     
     # temp_recipe = Recipe(name=name,image_file=image_file_url,serves = serves,difficulty=difficulty,time=time,views = 0,method = method,user_id = 1)
     # db.session.add(temp_recipe)
     # db.session.commit()
+    
+
     
     return render_template('upload_ingred.html')
 
@@ -499,7 +584,7 @@ def update_recipe_ingredients(recipe_id):
     # db.session.add(temp_recipe)
     # db.session.commit()
     
-    return render_template('update_ingred.html', all_ingreds=all_ingreds)
+    return render_template('update_ingred.html', all_ingreds=all_ingreds, recipe_id=recipe_id)
     
 @app.route('/add-recipe/submit', methods=['POST', 'GET'])
 def add_recipe_submit():
@@ -524,6 +609,17 @@ def add_recipe_submit():
                         
     db.session.add(temp_recipe)
     
+    allergy_info = {
+        'is_vegan': True,
+        'is_vegetarian': True,
+        'is_gluten_free': True
+    }
+    
+    for k, v in session["added_recipe_ingredients"].items():
+        for allergy in allergy_info:
+            if v[allergy] == False:
+                allergy_info[allergy] = False
+    
     for counter, (k, v) in enumerate(session["added_recipe_ingredients"].items()):
         
         # Add check to see if ingredient, unit, amount has been added before, if so skip adding it and append from db
@@ -534,24 +630,28 @@ def add_recipe_submit():
                               is_gluten_free=v["is_gluten_free"],
                               unit=v["unit"],
                               amount=v["amount"])
+                              
+        
         
         db.session.add(ingreds)
         temp_recipe.ingredients.append(ingreds)
     
     if request.method == "POST":
+        
         session.pop("added_recipe")
         session.pop("added_recipe_ingredients")
         db.session.commit()
         
-        return redirect(url_for('index'))
+        
+        
+        return redirect(url_for('account_my_recipes'))
         
     
-    
-    return render_template('upload_submit.html', added_recipe=added_recipe, added_recipe_ingredients=added_recipe_ingredients)
+    return render_template('upload_submit.html', allergy_info=allergy_info, added_recipe=added_recipe, added_recipe_ingredients=added_recipe_ingredients)
     
 @app.route('/update_recipe/submit/<recipe_id>', methods=['POST', 'GET'])
 def update_recipe_submit(recipe_id):
-    
+    # Checks to see if this is their recipes
         # Why is this not working?    
     try:
         session["added_recipe_ingredients"]
@@ -561,41 +661,60 @@ def update_recipe_submit(recipe_id):
     update_recipe_ingredients = session["update_recipe_ingredients"]
     update_recipe = session["update_recipe"]
                         
-    temp_recipe = Recipe.query.filter_by(id=recipe_id).first()
-    temp_recipe.name = session["update_recipe"]["name"]
-    temp_recipe.image_file = session["update_recipe"]["image_file_url"]
-    temp_recipe.serves = session["update_recipe"]["serves"]
-    temp_recipe.difficulty=session["update_recipe"]["difficulty"]
-    temp_recipe.time=session["update_recipe"]["time"]
-    temp_recipe.method = session["update_recipe"]["method"]
+    allergy_info = {
+        'is_vegan': True,
+        'is_vegetarian': True,
+        'is_gluten_free': True
+    }
     
-    for counter, (k, v) in enumerate(session["update_recipe_ingredients"].items()):
+    view_count = Recipe.query.filter_by(id=recipe_id).with_entities(Recipe.views).first()
+    view_count = view_count[0]
+
+    for k, v in session["update_recipe_ingredients"].items():
+        for allergy in allergy_info:
+            if v[allergy] == False:
+                allergy_info[allergy] = False
+        
+    
+    if request.method == "POST":
+        
+        temp_recipe = Recipe.query.filter_by(id=recipe_id).first()
+        temp_recipe.name = session["update_recipe"]["name"]
+        temp_recipe.image_file = session["update_recipe"]["image_file_url"]
+        temp_recipe.serves = session["update_recipe"]["serves"]
+        temp_recipe.difficulty=session["update_recipe"]["difficulty"]
+        temp_recipe.time=session["update_recipe"]["time"]
+        temp_recipe.method = session["update_recipe"]["method"]
+        
+        delete_str = "DELETE FROM recipe_ingredients WHERE recipe_id = %s ;" % recipe_id
+        db.engine.execute(delete_str)
+        
+        db.session.commit()
+        
+        for counter, (k, v) in enumerate(session["added_recipe_ingredients"].items()):
         
         # Add check to see if ingredient, unit, amount has been added before, if so skip adding it and append from db
         
-        ingreds = Ingredients(name=v["ingred"],
+            ingreds = Ingredients(name=v["ingred"],
                               is_vegetarian = v["is_vegetarian"],
                               is_vegan=v["is_vegan"],
                               is_gluten_free=v["is_gluten_free"],
                               unit=v["unit"],
                               amount=v["amount"])
+                              
+            db.session.add(ingreds)
+            temp_recipe.ingredients.append(ingreds)
         
-        db.session.add(ingreds)
-        temp_recipe.ingredients.append(ingreds)
-    
-    if request.method == "POST":
+        db.session.commit()
         
-        delete_str = "DELETE FROM recipe_ingredients WHERE recipe_id = %s ;" % recipe_id
-        db.engine.execute(delete_str)
         
         session.pop("update_recipe")
         session.pop("update_recipe_ingredients")
-        db.session.commit()
         
-        return redirect(url_for('index'))
+        return redirect(url_for('account_my_recipes'))
     
     
-    return render_template('update_submit.html', update_recipe=update_recipe, update_recipe_ingredients=update_recipe_ingredients)
+    return render_template('update_submit.html', view_count=view_count, recipe_id=recipe_id, allergy_info=allergy_info, update_recipe=update_recipe, update_recipe_ingredients=update_recipe_ingredients)
     
 @app.route('/recipe/<recipe_name>/<recipe_id>')
 def recipe(recipe_name, recipe_id):
@@ -627,8 +746,7 @@ def recipe(recipe_name, recipe_id):
         allergy_info[allergy] = allergy_res[0][0]
     
     recipe_result_name_list = recipe_result.name.split(' ')
-    print(recipe_result_name_list)
-    
+
     related_recipe_result = []
     
     for word in recipe_result_name_list:
@@ -646,72 +764,30 @@ def recipe(recipe_name, recipe_id):
     
     return render_template('recipe.html', user=user, related_recipe_result=related_recipe_result, recipe_result=recipe_result, ingredients_result=ingredients_result, allergy_info=allergy_info)
     
-@app.route('/search', methods=['POST', 'GET'])
-def search():
-    
-    page = request.args.get('page', 1, type=int)
-    
-    checkboxes = [None, None, None]
-    
-    if request.method == "POST":
-        search_term = request.form["search"] 
-        session["search_term"] = search_term
-        
-        recipe_type = request.form.getlist('recipe-type')
-        session["recipe_type"] = recipe_type
-        
-        result = return_search(recipe_type, search_term, 1)
-        next_url = url_for('search', page=result.next_num) \
-        if result.has_next else None
-        prev_url = url_for('search', page=result.prev_num) \
-        if result.has_prev else None
-        
-        total_pages = result.pages
-        pagination_num = create_pagination_num(total_pages, page)
-        
-        allergies = ['is_gluten_free','is_vegan','is_vegetarian']
-        search_recipes = []
-        allergy_info = {}
-        
-        search_recipes_ids = []
-        for res in result.items:
-          search_recipes_ids.append(res.id)
-        
-        for recipe in search_recipes_ids:
-            temp_recipe = Recipe.query.filter_by(id=recipe).first()
-            search_recipes.append(temp_recipe)
-            temp_allergy = {}
-            for allergy in allergies:
-                allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
-                temp_allergy[allergy] = allergy_res[0][0]
-            allergy_info[recipe] = temp_allergy
-        
-
-    else:
-        result = None
-        search_term = None 
-        allergy_info = None
-        next_url = None
-        prev_url = None
-        pagination_num = []
-    
-    
-        # test = Recipe.query.filter(~Recipe.ingredients.any(Ingredients.is_vegan == True))
-        # Check to see if returned recipes have nutritional requirements
-
-    
-    # checkboxes=checkboxes, make session
-    return render_template('search.html', allergy_info=allergy_info, result=result, checkboxes=checkboxes, search_term=search_term, next_url=next_url, prev_url=prev_url, pagination_num=pagination_num, page=page)
-    
 @app.route('/account/my-recipes', methods=['POST', 'GET'])
 def account_my_recipes():
 
     user = User.query.filter_by(username=session['username']).first()
-    
     all_recipes = Recipe.query.filter_by(user_id=user.id).with_entities(Recipe.name, Recipe.id).order_by(Recipe.views.desc()).all()
+    
+    if request.method == "POST":
+        if user.password == request.form["current-password"]:
+        
+            temp_user = User.query.filter_by(id=user.id).first()
+            if 'first_name' in request.form:
+                temp_user.first_name = request.form['first_name']
+            if 'last_name' in request.form:
+                temp_user.last_name = request.form["last_name"]
+            if 'username' in request.form:
+                temp_user.username = request.form["username"]
+                session['username'] = request.form["username"]
+            if 'password' in request.form:
+                temp_user.password = request.form["password"]
+            
+            db.session.commit()
 
     
-    return render_template('account_my_recipes.html', all_recipes=all_recipes)
+    return render_template('account_my_recipes.html', all_recipes=all_recipes, user=user)
     
 @app.route('/register', methods=['POST', 'GET'])
 def register():
