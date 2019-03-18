@@ -334,7 +334,8 @@ def search():
 app.route('/mockdata')
 def mockdata():
     mockdata_run()
-    return
+    return render_template('register.html')
+    
 
 @app.route('/')
 def index():
