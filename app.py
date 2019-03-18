@@ -847,7 +847,8 @@ def logout():
     
 @app.route('/mockdata')
 def mockdata_create():
-     db.create_all()
+     
+    db.create_all()
     
     user1 = User(first_name='Jonathan',last_name = 'McCroary',username='jmccroary0',password='3QBLC1z')
     user2 = User(first_name='Peta',last_name = 'Beckworth',username='pbeckworth1',password='5dDGrvV2Hf')
