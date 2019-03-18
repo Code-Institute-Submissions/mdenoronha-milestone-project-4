@@ -288,7 +288,7 @@ $('input.autocomplete').autocomplete({
     onAutocomplete: function(val) {
         //   Callback function when value is autcompleted.
         var val2 = val.replace(/ /g, "-");
-        window.open('/recipe/' + val2 + "/" + recipe_object[val], "_self");
+        window.open('/recipe/' + val2 + "/" + data_element_index[val], "_self");
     }
 });
 
