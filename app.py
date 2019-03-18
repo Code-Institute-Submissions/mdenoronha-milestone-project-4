@@ -847,6 +847,7 @@ def logout():
     
 @app.route('/mockdata')
 def mockdata_create():
+    
     user2 = User(first_name='Peta',last_name = 'Beckworth',username='pbeckworth1',password='5dDGrvV2Hf')
     user3 = User(first_name='Waiter',last_name = 'Bamsey',username='wbamsey2',password='Dn0RjPEw2Il')
     user4 = User(first_name='Tiffy',last_name = 'St. Pierre',username='tstpierre3',password='ZLiwuu')
@@ -897,7 +898,6 @@ def mockdata_create():
     user49 = User(first_name='Cortney',last_name = 'Suermeiers',username='csuermeiers1c',password='ZcmAFHwS4Qx')
     user50 = User(first_name='Darryl',last_name = 'Loxley',username='dloxley1d',password='JIByGZ')
     
-    db.session.add(user1)
     db.session.add(user2)
     db.session.add(user3)
     db.session.add(user4)
