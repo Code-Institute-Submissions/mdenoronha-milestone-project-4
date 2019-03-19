@@ -114,7 +114,10 @@
                         <!--<img class="recipe-image med" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe.image_file}}" alt="{{recipe.name}}"></img>-->
                     </div>
                     <div class="card-content recipe-title">
-                        <p>{{recipe.name}}</p>
+                        {% set name_list = recipe.name.split(" ") %}
+                        <p>{%for name in name_list%}
+                        {{name[0].upper() + name[1:] }}
+                        {% endfor %}</p>
                     </div>
                     <div class="card-content not-last recipe-info">
                         <p><span class="bold-text">SERVES</span><br>{{recipe.serves}}</p>
@@ -182,222 +185,23 @@
 </div>
 
 </div>
+
+
+<div class="hidden"
+  id="search-data-set"
+  data-lower-slider-serves="{{ session['filters']['serves'][0] }}"
+  data-upper-slider-serves="{{ session['filters']['serves'][1] }}"
+  data-lower-slider-time="{{ session['filters']['time'][0] }}"
+  data-upper-slider-time="{{ session['filters']['time'][1] }}"
+  data-chips="{% for ingredient in session['filters']['ingredients'] %}{{ingredient}}{% if loop.index != session['filters']['ingredients']|length %},{% endif %}{% endfor %}"
+   >
+</div>
 <!--For slider-->
-<script src='https://cdnjs.cloudflare.com/ajax/libs/wnumb/1.0.4/wNumb.min.js'></script>
+
 <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/wnumb/1.0.4/wNumb.min.js'></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/13.1.1/nouislider.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
 
-
-<script>
-    // use jQuery selectors
-    
-    $('.collapsible').collapsible();
-
-    var default_filters = true
-    var serves_slider_noUiSlider = noUiSlider.create($('#serves-slider')[0], {
-        start: [1, 6],
-        connect: true,
-        step: 1,
-        range: {
-            'min': 1,
-            'max': 6
-        },
-        ariaFormat: wNumb({
-            decimals: 0
-        }),
-        format: wNumb({
-            decimals: 0,
-
-        })
-    });
-    
-    var serves_slider = $('#serves-slider')[0];
-    var serves_slider_value = $('#serves-slider-value')[0];
-    
-    serves_slider.noUiSlider.set([
-        "{{ session["filters"]["serves"][0] }}",
-        "{{ session["filters"]["serves"][1] }}"])
-
-    $("#serves-slider-value-input").val(serves_slider_noUiSlider.get());
-
-    serves_slider_noUiSlider.on("change", function() {
-        $("#serves-slider-value-input").val(serves_slider_noUiSlider.get());
-    });
-
-
-    serves_slider.noUiSlider.on('update', function(values) {
-        serves_slider_value.innerHTML = values.join(' - ');
-    });
-
-    var time_slider_noUiSlider = noUiSlider.create($('#time-slider')[0], {
-        start: [10, 180],
-        connect: true,
-        step: 10,
-        range: {
-            'min': 10,
-            'max': 180
-        },
-        ariaFormat: wNumb({
-            decimals: 0
-        }),
-        format: wNumb({
-            decimals: 0,
-
-        })
-    });
-    
-    var time_slider = $('#time-slider')[0];
-    var time_slider_value = $('#time-slider-value')[0];
-    
-    time_slider.noUiSlider.set([
-        "{{ session["filters"]["time"][0] }}",
-        "{{ session["filters"]["time"][1] }}"])
-
-    $("#time-slider-value-input").val(time_slider_noUiSlider.get());
-
-    time_slider_noUiSlider.on("change", function() {
-        $("#time-slider-value-input").val(time_slider_noUiSlider.get());
-    });
-
-    time_slider.noUiSlider.on('update', function(values) {
-        time_slider_value.innerHTML = values.join(' - ');
-    });
-    
-    $('.ingredients-chips').chips({
-        placeholder: 'e.g. Chicken',
-        data: [
-        {% for ingredient in session["filters"]["ingredients"] %}
-        {
-            tag: "{{ingredient}}",
-        },
-        {% endfor %}
-        ],
-        // Syntax below is wrong, improve?
-        onChipAdd: function() {
-            if_default()
-            var ingredients_chips_instance = M.Chips.getInstance($('.ingredients-chips'))
-            var ingredients_chips_object = ingredients_chips_instance.chipsData
-            
-            $(".ingredient-warning-message").addClass('hidden')
-            
-            for(key in ingredients_chips_object) {
-                    var value = ingredients_chips_object[key]['tag'];
-                    if (/[^a-zA-Z ]/.test(value)) {
-                        ingredients_chips_instance.deleteChip(key);
-                        $(".ingredient-warning-message").removeClass('hidden')
-                    }
-                    
-            }
-            update_ingredients_input()
-            if_default()
-        },
-        onChipDelete: function() {
-            update_ingredients_input()
-            if_default()
-        }
-    });
-    
-    function update_ingredients_input() {
-        var ingredients_chips_instance = M.Chips.getInstance($('.ingredients-chips'));
-        var chips = [];
-        for(key in ingredients_chips_instance.chipsData) {
-                    var value = ingredients_chips_instance.chipsData[key]['tag'];
-                    chips.push(value)
-        }
-        $('#ingredients-chips-value-input').val(chips)
-    }
-    
-    update_ingredients_input()
-
-    $(".vegan").change(function() {
-        if (this.checked) {
-            $(".vegetarian").prop("checked", true)
-        }
-    })
-
-    $(".vegetarian").change(function() {
-        if ($(".vegan").is(':checked')) {
-            $(".vegan").prop("checked", false)
-        }
-    })
-    // http://jsfiddle.net/userdude/rzdGJ/2
-    var $window = $(window)
-
-    function resize() {
-        if ($window.width() < 600) {
-            $( '.collapsible-header' ).removeClass('hidden');
-            return $('.filter-body').addClass('collapsible-body');
-        }
-
-        $('.filter-body').removeClass('collapsible-body');
-        $( '.collapsible-header' ).addClass('hidden');
-    }
-    
-    $window
-        .resize(resize)
-        .trigger('resize');
-    
-    
-    function if_default() {
-        if($('#ingredients-chips-value-input').val() == "" &&
-            !$(".vegan").is(':checked') &&
-            !$(".vegetarian").is(':checked') &&
-            !$(".gluten_free").is(':checked') &&
-            $(".easy").is(':checked') &&
-            $(".medium").is(':checked') &&
-            $(".hard").is(':checked') &&
-            $("#serves-slider-value-input").val() == "1,6" &&
-            $("#time-slider-value-input").val() == "10,180") {
-                $('.reset-filters').removeClass("active-reset-filters")
-                console.log('true')
-            } else {
-                $('.reset-filters').addClass("active-reset-filters")
-                $('.collapsible-body').css('display', 'block')
-                $('.filter-column li').addClass('active')
-                console.log('false')
-            }
-    }
-    
-    if_default()
-    
-    $(".master-filter").on("change", function() {
-        if_default()
-    })
-    
-    time_slider.noUiSlider.on('set', function() {
-        if_default()
-    });
-    
-    serves_slider.noUiSlider.on('set', function() {
-        if_default()
-    });
-    
-    $('.reset-filters').on('click', function() {
-        $('#ingredients-chips-value-input').val("")
-        $('.vegan').prop('checked', false);
-        $('.vegetarian').prop('checked', false);
-        $('.gluten-free').prop('checked', false);
-        $('.easy').prop('checked', true);
-        $('.medium').prop('checked', true);
-        $('.hard').prop('checked', true);
-        $("#serves-slider-value-input").val("1,6")
-        serves_slider.noUiSlider.set([1,6])
-        $("#time-slider-value-input").val("10,180")
-        time_slider.noUiSlider.set([10,180])
-        
-        var ingredients = M.Chips.getInstance($(".ingredients-chips"))
-        var ingredients_length = ingredients.chipsData.length
-        console.log(ingredients_length)
-        for(i=0; i<ingredients_length; i++) {
-            ingredients.deleteChip(ingredients_length - 1 - i)
-        }
-        if_default()
-    })
-    
-    // Function-if-default - if all values at default, default=true
-    // On master-filter change, run-if-default, apply filter button change color, if default false, reset filters change color
-    // On reset filters click, change all filters to default, default=true
-    
-</script>
 {% endblock %}

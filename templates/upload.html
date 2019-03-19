@@ -84,35 +84,11 @@
         <button class="btn">NEXT</button>
     </form>
 </div>
+
 <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
-
-<script>
-    $(document).ready(function() {
-        $('select').formSelect();
-    });
-
-    $('select[name="serves"]').on('change', function() {
-        $('.input-field.serves input').addClass('valid-input')
-        $('.input-field.serves label').addClass('valid-label')
-    })
-
-    $('select[name="difficulty"]').on('change', function() {
-        $('.input-field.difficulty input').addClass('valid-input')
-        $('.input-field.difficulty label').addClass('valid-label')
-    })
-
-    $('select[name="time"]').on('change', function() {
-        $('.input-field.time input').addClass('valid-input')
-        $('.input-field.time label').addClass('valid-label')
-    })
-
-    $('textarea').on('change', function() {
-        $(this).addClass('valid')
-    })
-
-    $('input[type="file"]').on('change', function() {
-        $('.recipe-image-label').addClass('valid-label')
-    })
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/wnumb/1.0.4/wNumb.min.js'></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/13.1.1/nouislider.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 {% endblock %}

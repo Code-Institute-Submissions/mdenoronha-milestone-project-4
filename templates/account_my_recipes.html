@@ -16,9 +16,8 @@
         <ul id='recipe-dropdown' class='dropdown-content'>
             {% if not all_recipes %}
             <li><a>No Recipes Created</a></li>
-            {% endif %}
-            {% for recipe in all_recipes %}
-            <li><a href="{{url_for('recipe', recipe_name=recipe.name | replace(" ", "- "), recipe_id=recipe.id)}}">{{recipe.name}}</a></li>
+            {% endif %} {% for recipe in all_recipes %}
+            <li><a href="{{url_for('recipe', recipe_name=recipe.name | replace(" ", "- "), recipe_id=recipe.id)}}">{%for name in recipe.name.split(" ")%}{{name[0].upper() + name[1:]}} {% endfor %}</a></li>
             {% endfor %}
         </ul>
     </div>
@@ -28,74 +27,42 @@
 <div class="container form-container account-details-container">
     <h4>Account Details</h4>
     <form method="POST" enctype="multipart/form-data" autocomplete="off">
-    <div class="row">
-        <div class="col s12 m6">
-            <label for="icon_prefix1">First Name</label>
-            <input disabled required name="first_name" id="first-name" value="{{user.first_name}}" type="text" class="validate">
-            <i class="material-icons edit-first-name prefix">mode_edit</i>
+        <div class="row">
+            <div class="col s12 m6">
+                <label for="icon_prefix1">First Name</label>
+                <input disabled required name="first_name" id="first-name" value="{{user.first_name}}" type="text" class="validate">
+                <i class="material-icons edit-first-name prefix">mode_edit</i>
+            </div>
+            <div class="col s12 m6">
+                <label for="icon_prefix1">Last Name</label>
+                <input disabled required name="last_name" id="last-name" value="{{user.last_name}}" type="text" class="validate">
+                <i class="material-icons edit-last-name prefix">mode_edit</i>
+            </div>
+            <div class="col s12 m6">
+                <label for="icon_prefix1">Username</label>
+                <input disabled required name="username" id="username" value="{{user.username}}" type="text" class="validate">
+                <i class="material-icons edit-username prefix">mode_edit</i>
+            </div>
+            <div class="col s12 m6">
+                <label for="icon_prefix1">Password</label>
+                <input disabled required name="password" id="password" value="{{user.password}}" type="password" class="validate">
+                <i class="material-icons edit-password prefix">mode_edit</i>
+            </div>
         </div>
-        <div class="col s12 m6">
-            <label for="icon_prefix1">Last Name</label>
-            <input disabled required name="last_name" id="last-name" value="{{user.last_name}}" type="text" class="validate">
-            <i class="material-icons edit-last-name prefix">mode_edit</i>
+        <p class="hidden hidden-opacity account-changes-message">Please enter your current password to save any changes</p>
+        <div class="row">
+            <div class="col s12 m6">
+                <label for="icon_prefix1">Current Password</label>
+                <input disabled required name="current-password" id="current-password" type="password" class="validate">
+            </div>
+            <div class="col s12 m6">
+                <button class="account-details-submit disabled btn">SUBMIT</button>
+            </div>
         </div>
-        <div class="col s12 m6">
-            <label for="icon_prefix1">Username</label>
-            <input disabled required name="username" id="username" value="{{user.username}}" type="text" class="validate">
-            <i class="material-icons edit-username prefix">mode_edit</i>
-        </div>
-        <div class="col s12 m6">
-            <label for="icon_prefix1">Password</label>
-            <input disabled required name="password" id="password" value="{{user.password}}" type="password" class="validate">
-            <i class="material-icons edit-password prefix">mode_edit</i>
-        </div>
-    </div>
-    <p class="hidden hidden-opacity account-changes-message">Please enter your current password to save any changes</p>
-    <div class="row">
-        <div class="col s12 m6">
-            <label for="icon_prefix1">Current Password</label>
-            <input disabled required name="current-password" id="current-password" type="password" class="validate">
-        </div>
-        <div class="col s12 m6">
-           <button class="account-details-submit disabled btn">SUBMIT</button>
-        </div>
-    </div>
     </form>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-<script>
-
-    function account_details_change() {
-        $('.account-details-submit').removeClass('disabled')
-        $('.account-changes-message').removeClass('hidden')
-        $('.account-changes-message').removeClass('hidden-opacity')
-        $('#current-password').removeAttr('disabled')
-    }
-    
-    $('.edit-last-name').on('click', function() {
-        $('#last-name').removeAttr('disabled')
-        account_details_change()
-    })
-    
-    $('.edit-first-name').on('click', function() {
-        $('#first-name').removeAttr('disabled')
-        account_details_change()
-    })
-    
-    $('.edit-username').on('click', function() {
-        $('#username').removeAttr('disabled')
-        account_details_change()
-    })
-    
-    $('.edit-password').on('click', function() {
-        $('#password').removeAttr('disabled')
-        account_details_change()
-    })
-    
-
-
-    $('.dropdown-trigger').dropdown();
-</script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
 {% endblock %}

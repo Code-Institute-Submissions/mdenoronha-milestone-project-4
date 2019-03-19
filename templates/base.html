@@ -24,8 +24,8 @@
       <a href="#" data-target="mobile-nav" class="sidenav-trigger"><i class="material-icons">menu</i></a>
       <ul class="right hide-on-med-and-down">
           <!--Need to change-->
-        <li><a href="{{ url_for('account_my_recipes') }}">RECIPES</a></li>
-        <li><a href="{{ url_for('account_my_recipes') }}">INGREDIENTS</a></li>
+        <li><a href="{{ url_for('search') }}">ALL RECIPES</a></li>
+        <li><a href="{{ url_for('add_recipe_info') }}">ADD RECIPE</a></li>
         {% if session['username'] %} 
         <li><a class="btn" href="{{ url_for('account_my_recipes') }}">ACCOUNT</a></li>
         <li><a class="btn modal-trigger" href="#logout-modal">LOGOUT</a></li>
@@ -39,11 +39,12 @@
 
   <ul class="sidenav" id="mobile-nav">
         <li class="dropdown-header">MENU</li>
-        <li><a href="{{ url_for('account_my_recipes') }}">RECIPES</a></li>
-        <li><a href="{{ url_for('account_my_recipes') }}">INGREDIENTS</a></li>
+        <li><a href="{{ url_for('search') }}">ALL RECIPES</a></li>
+        <li><a href="{{ url_for('add_recipe_info') }}">ADD RECIPE</a></li>
         <li class="divider"></li>
         {% if session['username'] %} 
         <li><a href="{{ url_for('account_my_recipes') }}">ACCOUNT</a></li>
+        <!--Need to fix-->
         <li><a class="model-trigger" href="#logout-modal">LOGOUT</a></li>
         {% else %} 
         <li><a href="{{ url_for('register') }}">REGISTER</a></li>
@@ -71,33 +72,26 @@
           <div class="container">
             <div class="row">
               <div class="col l6 s12">
-                <h5 class="white-text">Footer Content</h5>
-                <p class="grey-text text-lighten-4">You can use rows and columns here to organize your footer content.</p>
+                <h5 class="white-text">Worldwide Recipes</h5>
+                <p class="grey-text text-lighten-4">A collection of the best recipes all in one place</p>
               </div>
               <div class="col l4 offset-l2 s12">
                 <h5 class="white-text">Get Social</h5>
                 <ul class="social-links">
-                  <li><a class="grey-text text-lighten-3" href="#!"> <i class="material-icons">face</i></a></li>
-                  <li><a class="grey-text text-lighten-3" href="#!"> <i class="material-icons">face</i></a></li>
-                  <li><a class="grey-text text-lighten-3" href="#!"> <i class="material-icons">face</i></a></li>
+                  <li><a class="grey-text text-lighten-3" target="_blank" href="https://www.instagram.com/"> <img src="{{ url_for('static', filename='imgs/instagram-icon.png')}}"</a></li>
+                  <li><a class="grey-text text-lighten-3" target="_blank" href="https://www.facebook.com/"> <img src="{{ url_for('static', filename='imgs/facebook-icon.png')}}"></a></li>
+                  <li><a class="grey-text text-lighten-3" target="_blank" href="https://twitter.com/"> <img src="{{ url_for('static', filename='imgs/twitter-icon.png')}}"</a></li>
                 </ul>
               </div>
             </div>
           </div>
           <div class="footer-copyright">
             <div class="container">
-            © 2014 Copyright Text
-            <a class="grey-text text-lighten-4 right" href="#!">More Links</a>
+            © 2019 Copyright Text
             </div>
           </div>
         </footer>
     
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
-    <script>
-        $('.modal').modal();
-    </script>
 </body>
 
 </html>

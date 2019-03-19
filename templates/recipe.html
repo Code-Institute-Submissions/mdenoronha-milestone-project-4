@@ -4,7 +4,7 @@
     <img class="recipe-image" src="{{ url_for('static', filename='imgs/background-image.png') }}" alt="{{recipe_result.name}}">
     </img>
     <!--<img class="recipe-image" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe_result.image_file}}" alt="{{recipe_result.name}}"></img>-->
-    <h2 class="bottom-left">{{recipe_result.name}}</h2>
+    <h2 class="bottom-left">{%for name in recipe_result.name.split(" ")%} {{name[0].upper() + name[1:] }} {% endfor %}</h2>
     <!--<h2 class="bottom-left">{{recipe_result.name}}</h2>-->
 </div>
 
@@ -50,7 +50,7 @@
 <div class="row">
     <div class="method-container col s12 m8 l5">
         <h3>Method</h3>
-        {{recipe_result.method}}
+        <p>{{recipe_result.method}}</p>
     </div>
     <div class="col s12 m4 l4">
         <ul class="ingredient-list">
@@ -71,7 +71,8 @@
                         <!--<img class="recipe-image med" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{related_recipe.image_file}}" alt="{{related_recipe.name}}"></img>-->
                     </div>
                     <div class="card-content recipe-title">
-                        <p>{{related_recipe.name}}</p>
+                        <p>{% for name in related_recipe.name.split(" ") %}
+                        {{name[0].upper() + name[1:]}} {% endfor %}</p>
                     </div>
                     <div class="card-content not-last recipe-info">
                         <p><span class="bold-text">SERVES</span><br>{{related_recipe.serves}}</p>
@@ -129,13 +130,8 @@
 
 <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/wnumb/1.0.4/wNumb.min.js'></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/13.1.1/nouislider.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
 
-
-<script>
-
-    $(document).ready(function() {
-        $('.fixed-action-btn').floatingActionButton();
-        $('.modal').modal();
-    });
-</script>
 {% endblock %}

@@ -83,70 +83,11 @@
             <button class="btn">Submit</button>
         </form>
     </div>
+</div>
 
-    <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
-    <script>
-        function update_checkbox_name() {
-        check = $('input[type="checkbox"]')
-        check.removeAttr('name')
-        
-        
-        var loop_check = 2
-        var name_num = 0
-        for(i=0; i < check.length; i++) {
-            if(loop_check == i) {
-                loop_check += 3
-                name_num += 1
-            }
-            $(check[i]).attr('name', $(check[i]).val() + '-' + name_num)
-        }
-    }
-
-    function ingredients_limit() {
-        ingredients = $('.ingredient-inputs')
-        if(ingredients.length > 20) {
-            $(".add-recipe").attr('disabled', true);
-        } else {
-            $(".add-recipe").attr('disabled', false);
-        }
-    }
-
-    $(document).ready(function() {
-        $('select').formSelect();
-    });
-
-    $('.add-recipe:not([disabled])').on("click", function() {
-        $(".example-ingredient").clone().removeClass("example-ingredient").addClass("temp-class").appendTo(".ingredient-form")
-        $(".temp-class .ingredient-allergy-info").append('<div class="col m12 s5"><a class="btn-floating right delete-recipe"><i class="material-icons">delete_forever</i></a></div>')
-        $(".temp-class input[name='amount']").val("").removeClass("valid");
-        $(".temp-class input[name='unit']").val("").removeClass("valid");
-        $(".temp-class input[name='ingredient']").val("").removeClass("valid");
-        $(".temp-class input[value='gluten-free']").prop('checked', false);
-        $(".temp-class input[value='vegan']").prop('checked', false);
-        $(".temp-class input[value='vegetarian']").prop('checked', false);
-        $(".temp-class").removeClass('temp-class')
-        update_checkbox_name()
-        ingredients_limit()
-    })
-
-    $(".add-ingredient-container").on("click", '.delete-recipe', function() {
-        $(this).closest($(".ingredient-inputs")).remove()
-        update_checkbox_name()
-        ingredients_limit()
-    })
-    
-    $(".add-ingredient-container").on("click", '.vegan', function() {
-       if($(this).is(':checked')) {
-            $(this).closest($(".ingredient-allergy-info")).find(".vegetarian").prop("checked", true)
-        }
-    })
-    
-
-    $(".add-ingredient-container").on("click", '.vegetarian', function() {
-        if(!$(this).is(':checked')) {
-            $(this).closest($(".ingredient-allergy-info")).find(".vegan").prop("checked", false)
-        }
-    })
-    </script>
-
-    {% endblock %}
+<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/wnumb/1.0.4/wNumb.min.js'></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/13.1.1/nouislider.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% endblock %}

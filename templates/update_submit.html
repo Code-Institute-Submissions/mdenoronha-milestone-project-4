@@ -1,7 +1,7 @@
 {% extends 'base.html' %} {% block content %}
 <div class="recipe-header">
     <img class="recipe-image" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{update_recipe['image_file_url']}}" alt="{{update_recipe['name']}}"></img>
-    <h2 class="bottom-left">{{update_recipe['name']}}</h2>
+    <h2 class="bottom-left">{% for name in update_recipe['name'].split(" ") %} {{name[0].upper() + name[1:]}} {% endfor %}</h2>
 </div>
 
 <div class="recipe-page-info row">
@@ -46,7 +46,7 @@
 <div class="row">
     <div class="method-container col s12 m8">
         <h3>Method</h3>
-        {{update_recipe['method']}}
+        <p>{{update_recipe['method']}}</p>
     </div>
     <div class="col s12 m4">
         <ul class="ingredient-list">
@@ -74,11 +74,9 @@
 
 
 <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
-
-<script>
-    $(document).ready(function() {
-        $('select').formSelect();
-    });
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/wnumb/1.0.4/wNumb.min.js'></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/13.1.1/nouislider.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 {% endblock %}
