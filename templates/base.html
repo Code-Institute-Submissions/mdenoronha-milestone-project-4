@@ -24,7 +24,7 @@
       <a href="#" data-target="mobile-nav" class="sidenav-trigger"><i class="material-icons">menu</i></a>
       <ul class="right hide-on-med-and-down">
           <!--Need to change-->
-        <li><a href="{{ url_for('search') }}">ALL RECIPES</a></li>
+        <li><a href="{{ url_for('auto_search', filter_to_add = 'none') }}">ALL RECIPES</a></li>
         <li><a href="{{ url_for('add_recipe_info') }}">ADD RECIPE</a></li>
         {% if session['username'] %} 
         <li><a class="btn" href="{{ url_for('account_my_recipes') }}">ACCOUNT</a></li>
@@ -39,7 +39,7 @@
 
   <ul class="sidenav" id="mobile-nav">
         <li class="dropdown-header">MENU</li>
-        <li><a href="{{ url_for('search') }}">ALL RECIPES</a></li>
+        <li><a href="{{ url_for('auto_search', filter_to_add = 'none') }}">ALL RECIPES</a></li>
         <li><a href="{{ url_for('add_recipe_info') }}">ADD RECIPE</a></li>
         <li class="divider"></li>
         {% if session['username'] %} 

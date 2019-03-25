@@ -17,7 +17,7 @@
             {% if not all_recipes %}
             <li><a>No Recipes Created</a></li>
             {% endif %} {% for recipe in all_recipes %}
-            <li><a href="{{url_for('recipe', recipe_name=recipe.name | replace(" ", "- "), recipe_id=recipe.id)}}">{%for name in recipe.name.split(" ")%}{{name[0].upper() + name[1:]}} {% endfor %}</a></li>
+            <li><a href="{{url_for('recipe', recipe_name=recipe.name | replace(" ", "-"), recipe_id=recipe.id)}}">{%for name in recipe.name.split(" ")%}{{name[0].upper() + name[1:]}} {% endfor %}</a></li>
             {% endfor %}
         </ul>
     </div>

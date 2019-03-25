@@ -24,8 +24,8 @@
     <a href="recipe/{{recipe.name | replace(" ", "-")}}/{{recipe.id}}">
       <div class="card">
         <div class="card-image">
-            <img class="recipe-image" src="{{ url_for('static', filename='imgs/background-image.png') }}" alt="{{recipe.name}}"></img>
-            <!--<img class="recipe-image med" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe.image_file}}" alt="{{recipe.name}}"></img>-->
+            <!--<img class="recipe-image" src="{{ url_for('static', filename='imgs/background-image.png') }}" alt="{{recipe.name}}"></img>-->
+            <img class="recipe-image" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe.image_file}}" alt="{{recipe.name}}"></img>
         </div>
         <div class="card-content recipe-title">
           <p>{% for name in recipe.name.split(" ")%}
