@@ -99,6 +99,14 @@ nav ul a:hover {
     display: inline;
 }
 
+.social-links img {
+    width: 2em;
+}
+
+.social-links img:hover {
+    opacity: 0.7;
+}
+
 /*Not working*/
 
 .dropdown-content {
@@ -232,6 +240,19 @@ li.dropdown-header {
 }
 
 
+@media only screen and (min-width: 991px) {
+    .search-page .card-content.recipe-title {
+        height: 6vw;
+        max-height: 70px;
+    }
+}
+
+@media only screen and (min-width: 601px) {
+    .featured-recipes .card-content.recipe-title {
+        height: 10vw;
+        max-height: 70px;
+    }
+}
 
 
 .featured-recipes .card {
@@ -268,6 +289,7 @@ li.dropdown-header {
 .card hr {
     margin: 0;
     border-top: 0px solid #eef0f2;
+    color: #eef0f2;
 }
 
 .active-allergy.vegetarian {
@@ -429,6 +451,10 @@ li.dropdown-header {
     border-right: 1px solid #eef0f2;
 }
 
+.method-container p {
+    white-space: pre-wrap;
+}
+
 .ingredient-list li:nth-child(odd) {
     background-color: rgba(150, 192, 183, 0.6);
 }
@@ -494,8 +520,8 @@ li.dropdown-header {
 .reset-filters {
     text-align: center;
     text-decoration: underline;
-    margin: 0;
-    padding: 0 0 0 10px;
+    margin: 0 auto;
+    width: 35%;
     color: rgba(0, 0, 0, 0.3);
     -webkit-transition: 100ms ease-out;
     -ms-transition: 100ms ease-out;
@@ -540,9 +566,14 @@ input[type=text]:not(.browser-default).search-page-search {
     padding: 0;
 }
 
+.collapsible-body.filter-body {
+    padding-top: 15px;
+}
+
 .filter-heading {
     border-bottom: 1px solid #eef0f2;
     margin-top: 15px;
+    padding-bottom: 7px;
 }
 
 .filter-heading.recipe-type-heading {
@@ -674,13 +705,16 @@ input[type=text]:not(.browser-default).search-page-search {
     margin-bottom: 40px;
 }
 
+.form-container .col .row {
+    margin: 0;
+}
+
 .form-container input[type=text]:not(.browser-default),
 .form-container input[type=text]:not(.browser-default):focus:not([readonly]),
 .form-container input.invalid[type=text]:not(.browser-default),
 .form-container input[type=password]:not(.browser-default),
 .form-container input[type=password]:not(.browser-default):focus:not([readonly]),
 .form-container input.invalid[type=password]:not(.browser-default) {
-    /*margin: 0 0 8px 11px;*/
     box-shadow: 0px 0px;
     box-shadow: none;
     border: none;
@@ -935,7 +969,7 @@ input[type=text]:not(.browser-default).search-page-search {
 
 /*Add recipe - ingredients*/
 
-.add-ingredient-container .input-field.col label {
+.form-container .input-field.col label {
     left: 0;
 }
 
@@ -953,6 +987,7 @@ input[type=text]:not(.browser-default).search-page-search {
 
 .ingredient-allergy-info {
     border-bottom: 1px solid #eef0f2;
+    padding-bottom: 20px;
 }
 
 .ingredient-inputs a {
