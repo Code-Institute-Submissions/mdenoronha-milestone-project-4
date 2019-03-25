@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, request, url_for, send_file, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
+# Needed?
 from sqlalchemy import or_, and_
 import os
 import json
@@ -69,7 +70,7 @@ def return_search(filters, search_term, page):
     filter_list_for_ingredients = []
     if filters["ingredients"]:
         for ingredient in filters["ingredients"]:
-            filter_list_for_ingredients.append(Recipe.ingredients.any(Ingredients.name == str(ingredient)))
+            filter_list_for_ingredients.append(Recipe.ingredients.any(Ingredients.name.contains(str(ingredient))))
     else: 
         filter_list_for_ingredients.append(Recipe.ingredients.any(Ingredients.id >= 1))
 
@@ -136,7 +137,7 @@ class Ingredients(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     # Removed unique, still need to db.create_all()
     name = db.Column(db.String(80), nullable=False)
-    unit = db.Column(db.String(80), nullable=True)
+    # unit = db.Column(db.String(80), nullable=True)
     amount = db.Column(db.String(80), nullable=False)
     is_vegetarian = db.Column(db.Boolean, nullable=False)
     is_vegan = db.Column(db.Boolean, nullable=False)
@@ -261,16 +262,17 @@ def search_get():
     for res in result.items:
       search_recipes_ids.append(res.id)
 
+
+
     for recipe in search_recipes_ids:
         temp_recipe = Recipe.query.filter_by(id=recipe).first()
         search_recipes.append(temp_recipe)
         temp_allergy = {}
         for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = FALSE))' % (recipe, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
             temp_allergy[allergy] = allergy_res[0][0]
         allergy_info[recipe] = temp_allergy
     
-    print(pagination_num)
     return render_template('search.html', allergy_info=allergy_info, result=result, search_term=search_term, pagination_num=pagination_num, page=page) 
     
 @app.route('/search', methods=['POST', 'GET'])
@@ -288,10 +290,8 @@ def search():
         session["recipe_type"] = recipe_type
         
         result = return_search(recipe_type, search_term, 1)
-        next_url = url_for('search', page=result.next_num) \
-        if result.has_next else None
-        prev_url = url_for('search', page=result.prev_num) \
-        if result.has_prev else None
+        print(result.items())
+        
         
         total_pages = result.pages
         pagination_num = create_pagination_num(total_pages, page)
@@ -309,7 +309,7 @@ def search():
             search_recipes.append(temp_recipe)
             temp_allergy = {}
             for allergy in allergies:
-                allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = FALSE))' % (recipe, allergy)).fetchall()
+                allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
                 temp_allergy[allergy] = allergy_res[0][0]
             allergy_info[recipe] = temp_allergy
         
@@ -328,12 +328,8 @@ def search():
 
     
     # checkboxes=checkboxes, make session
-    return render_template('search.html', allergy_info=allergy_info, result=result, checkboxes=checkboxes, search_term=search_term, next_url=next_url, prev_url=prev_url, pagination_num=pagination_num, page=page)
+    return render_template('search.html', allergy_info=allergy_info, result=result, checkboxes=checkboxes, search_term=search_term, pagination_num=pagination_num, page=page)
     
-app.route('/mockdata')
-def mockdata_url():
-    return render_template('register.html')
-
 @app.route('/')
 def index():
     
@@ -347,7 +343,7 @@ def index():
     recipe_dict = {}
     for recipe in recipe_names:
         # recipe_dict.update({recipe.name:recipe.id})
-        recipe_dict.update({recipe.name:""})
+        recipe_dict.update({recipe.name: recipe.id})
     # https://stackoverflow.com/questions/19884900/how-to-pass-dictionary-from-jinja2-using-python-to-javascript
     recipe_object = (json.dumps(recipe_dict)
     .replace(u'<', u'\\u003c')
@@ -362,17 +358,26 @@ def index():
     allergy_info = {}
 
     
-    for recipe in featured_recipes_ids:
-        temp_recipe = Recipe.query.filter_by(id=recipe).first()
-        featured_recipes.append(temp_recipe)
+    # for recipe in featured_recipes_ids:
+    #     temp_recipe = Recipe.query.filter_by(id=recipe).first()
+    #     featured_recipes.append(temp_recipe)
+        
+        
+    #     temp_allergy = {}
+    #     for allergy in allergies:
+    #         allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
+    #         temp_allergy[allergy] = allergy_res[0][0]
+    #     allergy_info[recipe] = temp_allergy
+
+    featured_recipes = Recipe.query.order_by(Recipe.views.desc()).limit(4).all()
+
+    for recipe in featured_recipes:
         temp_allergy = {}
         for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = FALSE))' % (recipe, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
             temp_allergy[allergy] = allergy_res[0][0]
-        allergy_info[recipe] = temp_allergy
-
-
-
+        allergy_info[recipe.id] = temp_allergy
+            
     return render_template('index.html',recipe_object=recipe_object, featured_recipes=featured_recipes, allergy_info=allergy_info)
     
 @app.route('/delete/<recipe_id>')
@@ -433,6 +438,11 @@ def add_recipe_info():
 def update_recipe_info(recipe_id):
     
     # Add check to see if session has username
+    if not session:
+        return redirect(url_for('register'))
+        
+    if 'username' not in session:
+        return redirect(url_for('register'))
     
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     user = User.query.filter_by(username=session["username"]).first()
@@ -472,6 +482,12 @@ def update_recipe_info(recipe_id):
 @app.route('/add-recipe/ingredients', methods=['POST', 'GET'])
 def add_recipe_ingredients():
     
+    if not session:
+        return redirect(url_for('register'))
+        
+    if 'username' not in session:
+        return redirect(url_for('register'))
+    
     # Why is this not working?    
     try:
         session["added_recipe"]
@@ -482,9 +498,8 @@ def add_recipe_ingredients():
         
         session["added_recipe_ingredients"] = {}
 
-        for counter, (ingred, amount, unit) in enumerate(zip(request.form.getlist('ingredient'),
-                                          request.form.getlist('amount'),
-                                          request.form.getlist('unit'))):
+        for counter, (ingred, amount) in enumerate(zip(request.form.getlist('ingredient'),
+                                          request.form.getlist('amount'))):
                 
                 
                 is_vegetarian = False
@@ -503,7 +518,6 @@ def add_recipe_ingredients():
                 temp_ingred = {
                     "ingred": ingred.lower(),
                     "amount": amount.lower(),
-                    "unit": unit.lower(),
                     "is_vegetarian" : is_vegetarian,
                     "is_vegan" : is_vegan,
                     "is_gluten_free" : is_gluten_free
@@ -523,6 +537,12 @@ def add_recipe_ingredients():
 
 @app.route('/update-recipe/ingredients/<recipe_id>', methods=['POST', 'GET'])  
 def update_recipe_ingredients(recipe_id):
+    
+    if not session:
+        return redirect(url_for('register'))
+        
+    if 'username' not in session:
+        return redirect(url_for('register'))
     
     user = User.query.filter_by(username=session["username"]).first()
     recipe = Recipe.query.filter_by(id=recipe_id).first()
@@ -550,9 +570,8 @@ def update_recipe_ingredients(recipe_id):
         
         session["update_recipe_ingredients"] = {}
 
-        for counter, (ingred, amount, unit) in enumerate(zip(request.form.getlist('ingredient'),
-                                          request.form.getlist('amount'),
-                                          request.form.getlist('unit'))):
+        for counter, (ingred, amount) in enumerate(zip(request.form.getlist('ingredient'),
+                                          request.form.getlist('amount'))):
                 
                 is_vegetarian = False
                 is_vegan = False
@@ -570,7 +589,6 @@ def update_recipe_ingredients(recipe_id):
                 temp_ingred = {
                     "ingred": ingred,
                     "amount": amount,
-                    "unit": unit,
                     "is_vegetarian" : is_vegetarian,
                     "is_vegan" : is_vegan,
                     "is_gluten_free" : is_gluten_free
@@ -587,6 +605,13 @@ def update_recipe_ingredients(recipe_id):
     
 @app.route('/add-recipe/submit', methods=['POST', 'GET'])
 def add_recipe_submit():
+    
+    if not session:
+        return redirect(url_for('register'))
+        
+    if 'username' not in session:
+        return redirect(url_for('register'))
+    
     # Why is this not working?    
     try:
         session["added_recipe_ingredients"]
@@ -627,7 +652,6 @@ def add_recipe_submit():
                               is_vegetarian = v["is_vegetarian"],
                               is_vegan=v["is_vegan"],
                               is_gluten_free=v["is_gluten_free"],
-                              unit=v["unit"],
                               amount=v["amount"])
                               
         
@@ -650,10 +674,17 @@ def add_recipe_submit():
     
 @app.route('/update_recipe/submit/<recipe_id>', methods=['POST', 'GET'])
 def update_recipe_submit(recipe_id):
+    
+    if not session:
+        return redirect(url_for('register'))
+        
+    if 'username' not in session:
+        return redirect(url_for('register'))
+    
     # Checks to see if this is their recipes
         # Why is this not working?    
     try:
-        session["added_recipe_ingredients"]
+        session["update_recipe_ingredients"]
     except KeyError:
         redirect(url_for('add_recipe_info'))
     
@@ -690,7 +721,7 @@ def update_recipe_submit(recipe_id):
         
         db.session.commit()
         
-        for counter, (k, v) in enumerate(session["added_recipe_ingredients"].items()):
+        for counter, (k, v) in enumerate(session["update_recipe_ingredients"].items()):
         
         # Add check to see if ingredient, unit, amount has been added before, if so skip adding it and append from db
         
@@ -698,7 +729,6 @@ def update_recipe_submit(recipe_id):
                               is_vegetarian = v["is_vegetarian"],
                               is_vegan=v["is_vegan"],
                               is_gluten_free=v["is_gluten_free"],
-                              unit=v["unit"],
                               amount=v["amount"])
                               
             db.session.add(ingreds)
@@ -741,11 +771,14 @@ def recipe(recipe_name, recipe_id):
     
     temp_allergy = {}
     for allergy in allergies:
-        allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = FALSE))' % (recipe_result.id, allergy)).fetchall()
+        # Change to FALSE for Heroku
+        allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe_result.id, allergy)).fetchall()
         allergy_info[allergy] = allergy_res[0][0]
     
-    recipe_result_name_list = recipe_result.name.split(' ')
-
+    filter_words = ["and", "with", "recipe", "on", "the", "&", "side", "of"]
+    recipe_result_name_list = (x for x in recipe_result.name.split(' ') if not x in filter_words)
+    
+    
     related_recipe_result = []
     
     for word in recipe_result_name_list:
@@ -756,16 +789,32 @@ def recipe(recipe_name, recipe_id):
             if not temp_related in related_recipe_result:
                 # Does this if work?
                 related_recipe_result.append(temp_result)
-        
+    
+    related_allergy_info = {}
+    for counter, recipe in enumerate(related_recipe_result):  
+        related_allergy_info[str(recipe.id)] = {}
+        for allergy in allergies:
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
+            id_num = "id_" + str(recipe.id)
+            related_allergy_info[str(recipe.id)][allergy] = allergy_res[0][0]
+    
+    
     # related_recipes = []
     # while related_recipes > 3:
-        
     
-    return render_template('recipe.html', user=user, related_recipe_result=related_recipe_result, recipe_result=recipe_result, ingredients_result=ingredients_result, allergy_info=allergy_info)
+    print(related_allergy_info)
+    
+    return render_template('recipe.html', user=user, related_recipe_result=related_recipe_result, related_allergy_info=related_allergy_info, recipe_result=recipe_result, ingredients_result=ingredients_result, allergy_info=allergy_info)
     
 @app.route('/account/my-recipes', methods=['POST', 'GET'])
 def account_my_recipes():
-
+    
+    if not session:
+        return redirect(url_for('register'))
+        
+    if 'username' not in session:
+        return redirect(url_for('register'))
+    
     user = User.query.filter_by(username=session['username']).first()
     all_recipes = Recipe.query.filter_by(user_id=user.id).with_entities(Recipe.name, Recipe.id).order_by(Recipe.views.desc()).all()
     
