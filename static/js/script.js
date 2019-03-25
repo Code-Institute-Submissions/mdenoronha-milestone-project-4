@@ -367,7 +367,6 @@ $('.add-recipe:not([disabled])').on("click", function() {
     $(".example-ingredient").clone().removeClass("example-ingredient").addClass("temp-class").appendTo(".ingredient-form")
     $(".temp-class .ingredient-allergy-info").append('<div class="col m12 s5"><a class="btn-floating right delete-recipe"><i class="material-icons">delete_forever</i></a></div>')
     $(".temp-class input[name='amount']").val("").removeClass("valid");
-    $(".temp-class input[name='unit']").val("").removeClass("valid");
     $(".temp-class input[name='ingredient']").val("").removeClass("valid");
     $(".temp-class input[value='gluten-free']").prop('checked', false);
     $(".temp-class input[value='vegan']").prop('checked', false);
