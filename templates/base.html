@@ -78,9 +78,9 @@
               <div class="col l4 offset-l2 s12">
                 <h5 class="white-text">Get Social</h5>
                 <ul class="social-links">
-                  <li><a class="grey-text text-lighten-3" target="_blank" href="https://www.instagram.com/"> <img src="{{ url_for('static', filename='imgs/instagram-icon.png')}}"</a></li>
+                  <li><a class="grey-text text-lighten-3" target="_blank" href="https://www.instagram.com/"> <img src="{{ url_for('static', filename='imgs/instagram-icon.png')}}"></a></li>
                   <li><a class="grey-text text-lighten-3" target="_blank" href="https://www.facebook.com/"> <img src="{{ url_for('static', filename='imgs/facebook-icon.png')}}"></a></li>
-                  <li><a class="grey-text text-lighten-3" target="_blank" href="https://twitter.com/"> <img src="{{ url_for('static', filename='imgs/twitter-icon.png')}}"</a></li>
+                  <li><a class="grey-text text-lighten-3" target="_blank" href="https://twitter.com/"> <img src="{{ url_for('static', filename='imgs/twitter-icon.png')}}"></a></li>
                 </ul>
               </div>
             </div>
@@ -91,6 +91,12 @@
             </div>
           </div>
         </footer>
+        
+<div class="hidden" id="alert-text" {% with message=get_flashed_messages() %} {% if message %} data-alert="{{message}}">
+</div>
+{% else %} data-alert=""> {% endif %} {% endwith %}
+</div>
+
     
 </body>
 

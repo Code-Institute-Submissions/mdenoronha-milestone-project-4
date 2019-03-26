@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, url_for, send_file, session
+from flask import Flask, render_template, redirect, request, url_for, send_file, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
 # Needed?
@@ -402,7 +402,8 @@ def delete_recipe(recipe_id):
     
     delete_str = "DELETE FROM recipe_ingredients WHERE recipe_id = %s ;" % recipe_id
     db.engine.execute(delete_str)
-
+    
+    flash("Recipe deleted successfully")
     return redirect(url_for('account_my_recipes'))
     
 @app.route('/add-recipe/info', methods=['POST', 'GET'])
@@ -439,9 +440,11 @@ def update_recipe_info(recipe_id):
     
     # Add check to see if session has username
     if not session:
+        flash("Please login to update recipes")
         return redirect(url_for('register'))
         
     if 'username' not in session:
+        flash("Please login to update recipes")
         return redirect(url_for('register'))
     
     recipe = Recipe.query.filter_by(id=recipe_id).first()
@@ -450,6 +453,7 @@ def update_recipe_info(recipe_id):
     # Check if user.id is same as recipe
     if recipe.user_id != user.id:
         # Change to account with message
+        flash("This recipe can only be edited by its author")
         return redirect(url_for('index'))
         
     if request.method == "POST":
@@ -539,9 +543,11 @@ def add_recipe_ingredients():
 def update_recipe_ingredients(recipe_id):
     
     if not session:
+        flash("Please login to update recipes")
         return redirect(url_for('register'))
         
     if 'username' not in session:
+        flash("Please login to update recipes")
         return redirect(url_for('register'))
     
     user = User.query.filter_by(username=session["username"]).first()
@@ -549,6 +555,7 @@ def update_recipe_ingredients(recipe_id):
     # Check if user.id is same as recipe
     if recipe.user_id != user.id:
         # Change to account with message
+        flash("This recipe can only be edited by its author")
         return redirect(url_for('index'))
     
     search_str = "SELECT * FROM recipe_ingredients WHERE recipe_id = %s ;" % recipe_id
@@ -666,7 +673,7 @@ def add_recipe_submit():
         db.session.commit()
         
         
-        
+        flash("Recipe added successfully")
         return redirect(url_for('account_my_recipes'))
         
     
@@ -676,10 +683,22 @@ def add_recipe_submit():
 def update_recipe_submit(recipe_id):
     
     if not session:
+        flash("Please login to update recipes")
         return redirect(url_for('register'))
         
     if 'username' not in session:
+        flash("Please login to update recipes")
         return redirect(url_for('register'))
+        
+        
+    recipe = Recipe.query.filter_by(id=recipe_id).first()
+    user = User.query.filter_by(username=session["username"]).first()
+    
+    # Check if user.id is same as recipe
+    if recipe.user_id != user.id:
+        # Change to account with message
+        flash("This recipe can only be edited by its author")
+        return redirect(url_for('index'))
     
     # Checks to see if this is their recipes
         # Why is this not working?    
@@ -740,6 +759,7 @@ def update_recipe_submit(recipe_id):
         session.pop("update_recipe")
         session.pop("update_recipe_ingredients")
         
+        flash("Recipe updated successfully")
         return redirect(url_for('account_my_recipes'))
     
     
@@ -833,7 +853,9 @@ def account_my_recipes():
                 temp_user.password = request.form["password"]
             
             db.session.commit()
-
+        
+        else:
+            flash("Password incorrect")
     
     return render_template('account_my_recipes.html', all_recipes=all_recipes, user=user)
     
@@ -860,6 +882,8 @@ def register_user():
         user = User(first_name=first_name,last_name=last_name, username=username,password = password)
         db.session.add(user)
         db.session.commit()
+        
+        flash("User registration successful")
         return redirect(url_for('index'))
     return redirect(url_for('register'))
     
@@ -891,7 +915,7 @@ def login_user():
 def logout():
     
     session.clear()
-
+    flash("Log out successful")
     return redirect(url_for('index'))
     
 # Change debug mode
