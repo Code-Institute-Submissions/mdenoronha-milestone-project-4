@@ -290,8 +290,7 @@ def search():
         session["recipe_type"] = recipe_type
         
         result = return_search(recipe_type, search_term, 1)
-        print(result.items())
-        
+
         
         total_pages = result.pages
         pagination_num = create_pagination_num(total_pages, page)
@@ -458,7 +457,6 @@ def update_recipe_info(recipe_id):
         
     if request.method == "POST":
         
-        
         try:
             request.files['inputFile']
         except KeyError:
@@ -492,12 +490,9 @@ def add_recipe_ingredients():
     if 'username' not in session:
         return redirect(url_for('register'))
     
-    # Why is this not working?    
-    try:
-        session["added_recipe"]
-    except KeyError:
-        redirect(url_for('add_recipe_info'))
-    
+    if "added_recipe" not in session:
+        return redirect(url_for('add_recipe_info'))
+        
     if request.method == "POST":
         
         session["added_recipe_ingredients"] = {}
@@ -549,6 +544,9 @@ def update_recipe_ingredients(recipe_id):
     if 'username' not in session:
         flash("Please login to update recipes")
         return redirect(url_for('register'))
+        
+    if "update_recipe" not in session:
+        return redirect(url_for('update_recipe_info', recipe_id=recipe_id))
     
     user = User.query.filter_by(username=session["username"]).first()
     recipe = Recipe.query.filter_by(id=recipe_id).first()
@@ -565,13 +563,6 @@ def update_recipe_ingredients(recipe_id):
     for counter, (k, v) in enumerate(all_ingreds_id):
 
         all_ingreds[counter] = Ingredients.query.filter_by(id=v).first()
-        
-        # Why is this not working? 
-    # Add check to see update recipe is same as recipe_id
-    try:
-        session["update_recipe"]
-    except KeyError:
-        redirect(url_for('update_recipe_info', recipe_id=recipe_id))
     
     if request.method == "POST":
         
@@ -609,7 +600,7 @@ def update_recipe_ingredients(recipe_id):
     # db.session.commit()
     
     return render_template('update_ingred.html', all_ingreds=all_ingreds, recipe_id=recipe_id)
-    
+
 @app.route('/add-recipe/submit', methods=['POST', 'GET'])
 def add_recipe_submit():
     
@@ -666,8 +657,11 @@ def add_recipe_submit():
         db.session.add(ingreds)
         temp_recipe.ingredients.append(ingreds)
     
+    print("not working")
+        
     if request.method == "POST":
         
+        print("working")
         session.pop("added_recipe")
         session.pop("added_recipe_ingredients")
         db.session.commit()
@@ -690,6 +684,12 @@ def update_recipe_submit(recipe_id):
         flash("Please login to update recipes")
         return redirect(url_for('register'))
         
+    if "update_recipe" not in session:
+        return redirect(url_for('update_recipe_info', recipe_id=recipe_id))
+        
+    if "update_recipe_ingredients" not in session:
+        return redirect(url_for('update_recipe_info', recipe_id=recipe_id))
+        
         
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     user = User.query.filter_by(username=session["username"]).first()
@@ -699,13 +699,6 @@ def update_recipe_submit(recipe_id):
         # Change to account with message
         flash("This recipe can only be edited by its author")
         return redirect(url_for('index'))
-    
-    # Checks to see if this is their recipes
-        # Why is this not working?    
-    try:
-        session["update_recipe_ingredients"]
-    except KeyError:
-        redirect(url_for('add_recipe_info'))
     
     update_recipe_ingredients = session["update_recipe_ingredients"]
     update_recipe = session["update_recipe"]
@@ -723,10 +716,10 @@ def update_recipe_submit(recipe_id):
         for allergy in allergy_info:
             if v[allergy] == False:
                 allergy_info[allergy] = False
-        
-    
+     
     if request.method == "POST":
         
+        print("working")
         temp_recipe = Recipe.query.filter_by(id=recipe_id).first()
         temp_recipe.name = session["update_recipe"]["name"]
         temp_recipe.image_file = session["update_recipe"]["image_file_url"]
@@ -781,10 +774,19 @@ def recipe(recipe_name, recipe_id):
         viewed_recipe = db.engine.execute(search_str).fetchall()
         
         if not viewed_recipe:
-
             user.viewed_recipe.append(recipe_result)
             recipe_result.views = recipe_result.views + 1
             db.session.commit()
+
+            """
+            A test account with a permenant not-viewed state necessary for
+            multiple tests in app_test.py
+            """
+            # if session["username"] == "testing-account-not-viewed-recipe":
+            #     db.engine.execute('DELETE FROM viewed_recipes WHERE user_ud = 55')
+            #     recipe_result.views = recipe_result.views - 1
+            #     db.session.commit()
+            #     print(recipe_result.views)
             
     allergies = ['is_gluten_free','is_vegan','is_vegetarian']
     allergy_info = {}
@@ -822,8 +824,7 @@ def recipe(recipe_name, recipe_id):
     # related_recipes = []
     # while related_recipes > 3:
     
-    print(related_allergy_info)
-    
+
     return render_template('recipe.html', user=user, related_recipe_result=related_recipe_result, related_allergy_info=related_allergy_info, recipe_result=recipe_result, ingredients_result=ingredients_result, allergy_info=allergy_info)
     
 @app.route('/account/my-recipes', methods=['POST', 'GET'])

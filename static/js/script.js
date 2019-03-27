@@ -12,7 +12,22 @@ $(document).ready(function() {
     $('.collapsible').collapsible();
     $('select').formSelect();
     $('.materialboxed').materialbox();
+
+    if ($('#alert-text').data("alert") != "") {
+        var alert_data = $('#alert-text').data("alert")
+        var alert_data_list = eval(alert_data)
+
+        for (i = 0; i < alert_data_list.length; i++) {
+            console.log("alert")
+            M.toast({ html: alert_data_list[i] })
+        }
+    }
 });
+
+
+
+
+// Alert
 
 // My account
 function account_details_change() {
@@ -280,15 +295,24 @@ if ($('#serves-slider')[0]) {
 
 // Homepage
 
-var data_element_index = $('#index-data-set').data("autocompleteRecipe")
+const data_element_index = $('#index-data-set').data("autocompleteRecipe")
+var data_element_no_values = {}
+
+// Removes all values from object that were being used by Materialize for images
+if (data_element_index) {
+    Object.keys(data_element_index).forEach(function(key) {
+        data_element_no_values[key] = null;
+    })
+}
+
 
 $('input.autocomplete').autocomplete({
-    data: data_element_index,
+    data: data_element_no_values,
     limit: 7,
-    onAutocomplete: function(val) {
+    onAutocomplete: function(k, v) {
         //   Callback function when value is autcompleted.
-        var val2 = val.replace(/ /g, "-");
-        window.open('/recipe/' + val2 + "/" + data_element_index[val], "_self");
+        var val_with_spaces = k.replace(/ /g, "-");
+        window.open('/recipe/' + val_with_spaces + "/" + data_element_index[k], "_self");
     }
 });
 
@@ -310,7 +334,7 @@ $(".change-recipe-image").on('click', function() {
     }
 })
 
-// Add recipe info
+// Add recipe info page
 
 $('select[name="serves"]').on('change', function() {
     $('.input-field.serves input').addClass('valid-input')
@@ -335,7 +359,7 @@ $('input[type="file"]').on('change', function() {
     $('.recipe-image-label').addClass('valid-label')
 })
 
-// Update/add ingredients
+// Update/add ingredients page
 
 function update_checkbox_name() {
     check = $('input[type="checkbox"]')
