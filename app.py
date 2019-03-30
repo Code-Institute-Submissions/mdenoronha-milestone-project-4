@@ -2,6 +2,7 @@ from flask import Flask, render_template, redirect, request, url_for, send_file,
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
 from werkzeug.exceptions import RequestEntityTooLarge
+from werkzeug.wsgi import LimitedStream
 # Needed?
 from sqlalchemy import or_, and_
 import os
@@ -24,6 +25,26 @@ app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
 
 s3 = FlaskS3(app)
 db = SQLAlchemy(app)
+
+class StreamConsumingMiddleware(object):
+
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        stream = LimitedStream(environ['wsgi.input'],
+                               int(environ['CONTENT_LENGTH'] or 0))
+        environ['wsgi.input'] = stream
+        app_iter = self.app(environ, start_response)
+        try:
+            stream.exhaust()
+            for event in app_iter:
+                yield event
+        finally:
+            if hasattr(app_iter, 'close'):
+                app_iter.close()
+                
+app.wsgi_app = StreamConsumingMiddleware(app.wsgi_app)
 
 def create_pagination_num(total_pages, page):
     
