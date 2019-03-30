@@ -424,8 +424,6 @@ def add_recipe_info():
             recipe_picture = request.files['inputFile']
         except RequestEntityTooLarge:
             print("error")
-            flash('File size too large.  Limit is 2 MB.')
-            return redirect(url_for('index'))
 
         image_file_url = save_profile_picture(recipe_picture)
         
