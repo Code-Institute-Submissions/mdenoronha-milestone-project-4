@@ -408,6 +408,10 @@ def delete_recipe(recipe_id):
     flash("Recipe deleted successfully")
     return redirect(url_for('account_my_recipes'))
     
+@app.errorhandler(413)
+def page_not_found(e):
+    return "Your error page for 413 status code", 413
+    
 @app.route('/add-recipe/info', methods=['POST', 'GET'])
 def add_recipe_info():
     
@@ -424,8 +428,8 @@ def add_recipe_info():
             recipe_picture = request.files['inputFile']
         except RequestEntityTooLarge:
             print("error")
-
-        image_file_url = save_profile_picture(recipe_picture)
+        else:
+            image_file_url = save_profile_picture(recipe_picture)
         
         session["added_recipe"] = {
             'name': request.form['dish_name'],
