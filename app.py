@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, request, url_for, send_file, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
+from werkzeug.exceptions import RequestEntityTooLarge
 # Needed?
 from sqlalchemy import or_, and_
 import os
@@ -19,6 +20,7 @@ app.config['SECRET_KEY'] = 'dsaf0897sfdg45sfdgfdsaqzdf98sdf0a'
 # AWS
 app.config['FLASKS3_BUCKET_NAME'] = "recipe-db"
 app.config['FLASKS3_ACTIVE'] = False
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
 
 s3 = FlaskS3(app)
 db = SQLAlchemy(app)
@@ -269,7 +271,7 @@ def search_get():
         search_recipes.append(temp_recipe)
         temp_allergy = {}
         for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = False))' % (recipe, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
             temp_allergy[allergy] = allergy_res[0][0]
         allergy_info[recipe] = temp_allergy
     
@@ -308,7 +310,7 @@ def search():
             search_recipes.append(temp_recipe)
             temp_allergy = {}
             for allergy in allergies:
-                allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = False))' % (recipe, allergy)).fetchall()
+                allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
                 temp_allergy[allergy] = allergy_res[0][0]
             allergy_info[recipe] = temp_allergy
         
@@ -373,7 +375,7 @@ def index():
     for recipe in featured_recipes:
         temp_allergy = {}
         for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = False))' % (recipe.id, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
             temp_allergy[allergy] = allergy_res[0][0]
         allergy_info[recipe.id] = temp_allergy
             
@@ -393,6 +395,7 @@ def delete_recipe(recipe_id):
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     
     if user.id != recipe.user_id:
+        flash("You may only delete recipes you own")
         return redirect(url_for('account_my_recipes'))
     
     Recipe.query.filter_by(id=recipe_id).delete()
@@ -417,8 +420,13 @@ def add_recipe_info():
     if request.method == 'POST':
         
         # Add check to see if recipe name has been added before
-        
-        recipe_picture = request.files['inputFile']
+        try:
+            recipe_picture = request.files['inputFile']
+        except RequestEntityTooLarge:
+            print("error")
+            flash('File size too large.  Limit is 2 MB.')
+            return redirect(url_for('index'))
+
         image_file_url = save_profile_picture(recipe_picture)
         
         session["added_recipe"] = {
@@ -657,11 +665,9 @@ def add_recipe_submit():
         db.session.add(ingreds)
         temp_recipe.ingredients.append(ingreds)
     
-    print("not working")
-        
+
     if request.method == "POST":
         
-        print("working")
         session.pop("added_recipe")
         session.pop("added_recipe_ingredients")
         db.session.commit()
@@ -673,6 +679,7 @@ def add_recipe_submit():
     
     return render_template('upload_submit.html', allergy_info=allergy_info, added_recipe=added_recipe, added_recipe_ingredients=added_recipe_ingredients)
     
+# Change to update-recipe
 @app.route('/update_recipe/submit/<recipe_id>', methods=['POST', 'GET'])
 def update_recipe_submit(recipe_id):
     
@@ -719,7 +726,6 @@ def update_recipe_submit(recipe_id):
      
     if request.method == "POST":
         
-        print("working")
         temp_recipe = Recipe.query.filter_by(id=recipe_id).first()
         temp_recipe.name = session["update_recipe"]["name"]
         temp_recipe.image_file = session["update_recipe"]["image_file_url"]
@@ -794,7 +800,7 @@ def recipe(recipe_name, recipe_id):
     temp_allergy = {}
     for allergy in allergies:
         # Change to FALSE for Heroku
-        allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = False))' % (recipe_result.id, allergy)).fetchall()
+        allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe_result.id, allergy)).fetchall()
         allergy_info[allergy] = allergy_res[0][0]
     
     filter_words = ["and", "with", "recipe", "on", "the", "&", "side", "of"]
@@ -816,7 +822,7 @@ def recipe(recipe_name, recipe_id):
     for counter, recipe in enumerate(related_recipe_result):  
         related_allergy_info[str(recipe.id)] = {}
         for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = False))' % (recipe.id, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
             id_num = "id_" + str(recipe.id)
             related_allergy_info[str(recipe.id)][allergy] = allergy_res[0][0]
     
@@ -863,6 +869,7 @@ def account_my_recipes():
 @app.route('/register', methods=['POST', 'GET'])
 def register():
     
+
     return render_template('register.html')
     
 @app.route('/register_user', methods=['POST', 'GET'])
