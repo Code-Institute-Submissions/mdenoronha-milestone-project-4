@@ -271,7 +271,7 @@ def search_get():
         search_recipes.append(temp_recipe)
         temp_allergy = {}
         for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = False))' % (recipe, allergy)).fetchall()
             temp_allergy[allergy] = allergy_res[0][0]
         allergy_info[recipe] = temp_allergy
     
@@ -310,7 +310,7 @@ def search():
             search_recipes.append(temp_recipe)
             temp_allergy = {}
             for allergy in allergies:
-                allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
+                allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = False))' % (recipe, allergy)).fetchall()
                 temp_allergy[allergy] = allergy_res[0][0]
             allergy_info[recipe] = temp_allergy
         
@@ -366,7 +366,7 @@ def index():
         
     #     temp_allergy = {}
     #     for allergy in allergies:
-    #         allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
+    #         allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = False))' % (recipe, allergy)).fetchall()
     #         temp_allergy[allergy] = allergy_res[0][0]
     #     allergy_info[recipe] = temp_allergy
 
@@ -375,7 +375,7 @@ def index():
     for recipe in featured_recipes:
         temp_allergy = {}
         for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = False))' % (recipe.id, allergy)).fetchall()
             temp_allergy[allergy] = allergy_res[0][0]
         allergy_info[recipe.id] = temp_allergy
             
@@ -800,7 +800,7 @@ def recipe(recipe_name, recipe_id):
     temp_allergy = {}
     for allergy in allergies:
         # Change to FALSE for Heroku
-        allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe_result.id, allergy)).fetchall()
+        allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = False))' % (recipe_result.id, allergy)).fetchall()
         allergy_info[allergy] = allergy_res[0][0]
     
     filter_words = ["and", "with", "recipe", "on", "the", "&", "side", "of"]
@@ -822,7 +822,7 @@ def recipe(recipe_name, recipe_id):
     for counter, recipe in enumerate(related_recipe_result):  
         related_allergy_info[str(recipe.id)] = {}
         for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = False))' % (recipe.id, allergy)).fetchall()
             id_num = "id_" + str(recipe.id)
             related_allergy_info[str(recipe.id)][allergy] = allergy_res[0][0]
     
