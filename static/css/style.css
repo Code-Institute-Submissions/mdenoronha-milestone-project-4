@@ -107,7 +107,7 @@ nav ul a:hover {
     opacity: 0.7;
 }
 
-/*Not working*/
+/*Not working Page */
 
 .dropdown-content {
     background-color: #232323;
@@ -386,7 +386,7 @@ li.dropdown-header {
 }
 
 
-/*Recipe page*/
+/*Recipe page Page */
 
 .material-icons.recipe-red {
     background-color: #725752;
@@ -488,7 +488,7 @@ li.dropdown-header {
     }
 }
 
-/*Search page*/
+/*Search page Page */
 
 @media only screen and (max-width: 600px) {
     .search-page.container {
@@ -917,6 +917,10 @@ input[type=text]:not(.browser-default).search-page-search {
     background-color: #eee;
 }
 
+ul > li.disabled {
+    display: none !important;
+}
+
 .stage-tracker a:disabled {
     cursor: inherit;
 }
@@ -1025,7 +1029,7 @@ input[type=text]:not(.browser-default).search-page-search {
     justify-content: space-evenly;
 }
 
-/*Update Recipe*/
+/*Update Recipe Page */
 
 .add-recipe-container .change-recipe-image.btn {
     margin: 0;
