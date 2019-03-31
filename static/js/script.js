@@ -359,6 +359,15 @@ $('input[type="file"]').on('change', function() {
     $('.recipe-image-label').addClass('valid-label')
 })
 
+var file_input = $('#file-input')
+
+file_input.on("change", function() {
+    if (this.files[0].size > 500000 ) {
+        M.toast({ html: "Only files under 500kb can be uploaded" })
+        this.value = "";
+    }
+})
+
 // Update/add ingredients page
 
 function update_checkbox_name() {
