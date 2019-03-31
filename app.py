@@ -460,11 +460,11 @@ def update_recipe_info(recipe_id):
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     user = User.query.filter_by(username=session["username"]).first()
     
-    # # Check if user.id is same as recipe
-    # if recipe.user_id != user.id:
-    #     # Change to account with message
-    #     flash("This recipe can only be edited by its author")
-    #     return redirect(url_for('index'))
+    # Check if user.id is same as recipe
+    if recipe.user_id != user.id:
+        # Change to account with message
+        flash("This recipe can only be edited by its author")
+        return redirect(url_for('index'))
         
     if request.method == "POST":
         
@@ -575,11 +575,11 @@ def update_recipe_ingredients(recipe_id):
     user = User.query.filter_by(username=session["username"]).first()
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     
-    # # Check if user.id is same as recipe
-    # if recipe.user_id != user.id:
-    #     # Change to account with message
-    #     flash("This recipe can only be edited by its author")
-    #     return redirect(url_for('index'))
+    # Check if user.id is same as recipe
+    if recipe.user_id != user.id:
+        # Change to account with message
+        flash("This recipe can only be edited by its author")
+        return redirect(url_for('index'))
     
     search_str = "SELECT * FROM recipe_ingredients WHERE recipe_id = %s ;" % recipe_id
     all_ingreds_id = db.engine.execute(search_str).fetchall()
@@ -718,11 +718,11 @@ def update_recipe_submit(recipe_id):
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     user = User.query.filter_by(username=session["username"]).first()
     
-    # # Check if user.id is same as recipe
-    # if recipe.user_id != user.id:
-    #     # Change to account with message
-    #     flash("This recipe can only be edited by its author")
-    #     return redirect(url_for('index'))
+    # Check if user.id is same as recipe
+    if recipe.user_id != user.id:
+        # Change to account with message
+        flash("This recipe can only be edited by its author")
+        return redirect(url_for('index'))
     
     update_recipe_ingredients = session["update_recipe_ingredients"]
     update_recipe = session["update_recipe"]
