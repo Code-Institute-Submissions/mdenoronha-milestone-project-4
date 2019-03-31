@@ -1,10 +1,8 @@
 from flask import Flask, render_template, redirect, request, url_for, send_file, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
-from werkzeug.exceptions import RequestEntityTooLarge
-from werkzeug.wsgi import LimitedStream
 # Needed?
-from sqlalchemy import or_, and_
+# from sqlalchemy import or_, and_
 import os
 import json
 from flask_s3 import FlaskS3
@@ -21,33 +19,10 @@ app.config['SECRET_KEY'] = 'dsaf0897sfdg45sfdgfdsaqzdf98sdf0a'
 # AWS
 app.config['FLASKS3_BUCKET_NAME'] = "recipe-db"
 app.config['FLASKS3_ACTIVE'] = False
-app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 s3 = FlaskS3(app)
 db = SQLAlchemy(app)
-
-# os.environ["CONTENT_LENGTH"] = "24"
-
-# class StreamConsumingMiddleware(object):
-
-#     def __init__(self, app):
-#         self.app = app
-
-#     def __call__(self, environ, start_response):
-#         stream = LimitedStream(environ['wsgi.input'],
-#                               int(os.environ['CONTENT_LENGTH'] or 0))
-#         environ['wsgi.input'] = stream
-#         app_iter = self.app(environ, start_response)
-#         try:
-#             stream.exhaust()
-#             for event in app_iter:
-#                 yield event
-#         finally:
-#             if hasattr(app_iter, 'close'):
-#                 app_iter.close()
-                
-# app.wsgi_app = StreamConsumingMiddleware(app.wsgi_app)
 
 def create_pagination_num(total_pages, page):
     
@@ -162,9 +137,7 @@ class Recipe(db.Model):
         
 class Ingredients(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    # Removed unique, still need to db.create_all()
     name = db.Column(db.String(80), nullable=False)
-    # unit = db.Column(db.String(80), nullable=True)
     amount = db.Column(db.String(80), nullable=False)
     is_vegetarian = db.Column(db.Boolean, nullable=False)
     is_vegan = db.Column(db.Boolean, nullable=False)
@@ -296,11 +269,13 @@ def search_get():
         search_recipes.append(temp_recipe)
         temp_allergy = {}
         for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe, allergy)).fetchall()
             temp_allergy[allergy] = allergy_res[0][0]
         allergy_info[recipe] = temp_allergy
+        
+    title = "Search Recipes: %s" % search_term
     
-    return render_template('search.html', allergy_info=allergy_info, result=result, search_term=search_term, pagination_num=pagination_num, page=page) 
+    return render_template('search.html', allergy_info=allergy_info, result=result, search_term=search_term, pagination_num=pagination_num, page=page, title=title) 
     
 @app.route('/search', methods=['POST', 'GET'])
 def search():
@@ -335,7 +310,7 @@ def search():
             search_recipes.append(temp_recipe)
             temp_allergy = {}
             for allergy in allergies:
-                allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
+                allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe, allergy)).fetchall()
                 temp_allergy[allergy] = allergy_res[0][0]
             allergy_info[recipe] = temp_allergy
         
@@ -391,7 +366,7 @@ def index():
         
     #     temp_allergy = {}
     #     for allergy in allergies:
-    #         allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
+    #         allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe, allergy)).fetchall()
     #         temp_allergy[allergy] = allergy_res[0][0]
     #     allergy_info[recipe] = temp_allergy
 
@@ -400,11 +375,11 @@ def index():
     for recipe in featured_recipes:
         temp_allergy = {}
         for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe.id, allergy)).fetchall()
             temp_allergy[allergy] = allergy_res[0][0]
         allergy_info[recipe.id] = temp_allergy
             
-    return render_template('index.html',recipe_object=recipe_object, featured_recipes=featured_recipes, allergy_info=allergy_info)
+    return render_template('index.html',recipe_object=recipe_object, featured_recipes=featured_recipes, allergy_info=allergy_info, title="Worldwide Recipes | Home")
     
 @app.route('/delete/<recipe_id>')
 def delete_recipe(recipe_id):
@@ -433,11 +408,6 @@ def delete_recipe(recipe_id):
     flash("Recipe deleted successfully")
     return redirect(url_for('account_my_recipes'))
     
-# @app.errorhandler(413)
-# def page_not_found(e):
-#     return "Your error page for 413 status code", 413
-    
-    
 @app.route('/add-recipe/info', methods=['POST', 'GET'])
 def add_recipe_info():
     
@@ -455,12 +425,10 @@ def add_recipe_info():
             return redirect(url_for('add_recipe_info'))
         
         # Add check to see if recipe name has been added before
-        # try:
-        #     recipe_picture = request.files['inputFile']
-        # except RequestEntityTooLarge:
-        #     print("error")
-        #     return redirect(url_for('index'))
-        # else:
+        same_name_result = Recipe.query.filter(func.lower(Recipe.name) == func.lower(request.form['dish_name'])).first()
+        if same_name_result:
+            flash("A recipe by this name has already been created")
+            return redirect(url_for('add_recipe_info'))
     
         image_file_url = save_profile_picture(recipe_picture)
         
@@ -475,7 +443,7 @@ def add_recipe_info():
         
         return redirect(url_for('add_recipe_ingredients'))
         
-    return render_template('upload.html')
+    return render_template('upload.html', title="Add Recipe | Info")
 
 @app.route('/update-recipe/info/<recipe_id>', methods=['POST', 'GET'])
 def update_recipe_info(recipe_id):
@@ -492,11 +460,11 @@ def update_recipe_info(recipe_id):
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     user = User.query.filter_by(username=session["username"]).first()
     
-    # Check if user.id is same as recipe
-    if recipe.user_id != user.id:
-        # Change to account with message
-        flash("This recipe can only be edited by its author")
-        return redirect(url_for('index'))
+    # # Check if user.id is same as recipe
+    # if recipe.user_id != user.id:
+    #     # Change to account with message
+    #     flash("This recipe can only be edited by its author")
+    #     return redirect(url_for('index'))
         
     if request.method == "POST":
         
@@ -514,6 +482,13 @@ def update_recipe_info(recipe_id):
             
             image_file_url = save_profile_picture(recipe_picture)
             
+        
+        # Add check to see if recipe name has been added before
+        same_name_result = Recipe.query.filter(func.lower(Recipe.name) == func.lower(request.form['dish_name'])).first()
+        if same_name_result and int(same_name_result.id) != int(recipe_id):
+            flash("A recipe by this name has already been created")
+            return redirect(url_for('update_recipe_info', recipe_id=recipe_id))
+    
 
         session["update_recipe"] = {
             'name': request.form['dish_name'],
@@ -528,7 +503,7 @@ def update_recipe_info(recipe_id):
         
         return redirect(url_for('update_recipe_ingredients', recipe_id=recipe_id))
     
-    return render_template('update.html', recipe=recipe)
+    return render_template('update.html', recipe=recipe, title="Update Recipe | Info")
     
 @app.route('/add-recipe/ingredients', methods=['POST', 'GET'])
 def add_recipe_ingredients():
@@ -575,13 +550,13 @@ def add_recipe_ingredients():
 
         return redirect(url_for('add_recipe_submit'))
     
-    # temp_recipe = Recipe(name=name,image_file=image_file_url,serves = serves,difficulty=difficulty,time=time,views = 0,method = method,user_id = 1)
+    # temp_recipe = Recipe(name=name,image_file=image_file_url,serves = serves,difficulty=difficulty,time=time,views = false,method = method,user_id = 1)
     # db.session.add(temp_recipe)
     # db.session.commit()
     
 
     
-    return render_template('upload_ingred.html')
+    return render_template('upload_ingred.html', title="Add Recipe | Ingredients")
 
 @app.route('/update-recipe/ingredients/<recipe_id>', methods=['POST', 'GET'])  
 def update_recipe_ingredients(recipe_id):
@@ -599,11 +574,12 @@ def update_recipe_ingredients(recipe_id):
     
     user = User.query.filter_by(username=session["username"]).first()
     recipe = Recipe.query.filter_by(id=recipe_id).first()
-    # Check if user.id is same as recipe
-    if recipe.user_id != user.id:
-        # Change to account with message
-        flash("This recipe can only be edited by its author")
-        return redirect(url_for('index'))
+    
+    # # Check if user.id is same as recipe
+    # if recipe.user_id != user.id:
+    #     # Change to account with message
+    #     flash("This recipe can only be edited by its author")
+    #     return redirect(url_for('index'))
     
     search_str = "SELECT * FROM recipe_ingredients WHERE recipe_id = %s ;" % recipe_id
     all_ingreds_id = db.engine.execute(search_str).fetchall()
@@ -644,11 +620,11 @@ def update_recipe_ingredients(recipe_id):
     
         return redirect(url_for('update_recipe_submit', recipe_id=recipe_id))
     
-    # temp_recipe = Recipe(name=name,image_file=image_file_url,serves = serves,difficulty=difficulty,time=time,views = 0,method = method,user_id = 1)
+    # temp_recipe = Recipe(name=name,image_file=image_file_url,serves = serves,difficulty=difficulty,time=time,views = false,method = method,user_id = 1)
     # db.session.add(temp_recipe)
     # db.session.commit()
     
-    return render_template('update_ingred.html', all_ingreds=all_ingreds, recipe_id=recipe_id)
+    return render_template('update_ingred.html', all_ingreds=all_ingreds, recipe_id=recipe_id, title="Update Recipe | Ingredients")
 
 @app.route('/add-recipe/submit', methods=['POST', 'GET'])
 def add_recipe_submit():
@@ -718,10 +694,10 @@ def add_recipe_submit():
         return redirect(url_for('account_my_recipes'))
         
     
-    return render_template('upload_submit.html', allergy_info=allergy_info, added_recipe=added_recipe, added_recipe_ingredients=added_recipe_ingredients)
+    return render_template('upload_submit.html', allergy_info=allergy_info, added_recipe=added_recipe, added_recipe_ingredients=added_recipe_ingredients, title="Add Recipe | Submit")
     
 # Change to update-recipe
-@app.route('/update_recipe/submit/<recipe_id>', methods=['POST', 'GET'])
+@app.route('/update-recipe/submit/<recipe_id>', methods=['POST', 'GET'])
 def update_recipe_submit(recipe_id):
     
     if not session:
@@ -742,11 +718,11 @@ def update_recipe_submit(recipe_id):
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     user = User.query.filter_by(username=session["username"]).first()
     
-    # Check if user.id is same as recipe
-    if recipe.user_id != user.id:
-        # Change to account with message
-        flash("This recipe can only be edited by its author")
-        return redirect(url_for('index'))
+    # # Check if user.id is same as recipe
+    # if recipe.user_id != user.id:
+    #     # Change to account with message
+    #     flash("This recipe can only be edited by its author")
+    #     return redirect(url_for('index'))
     
     update_recipe_ingredients = session["update_recipe_ingredients"]
     update_recipe = session["update_recipe"]
@@ -803,7 +779,7 @@ def update_recipe_submit(recipe_id):
         return redirect(url_for('account_my_recipes'))
     
     
-    return render_template('update_submit.html', view_count=view_count, recipe_id=recipe_id, allergy_info=allergy_info, update_recipe=update_recipe, update_recipe_ingredients=update_recipe_ingredients)
+    return render_template('update_submit.html', view_count=view_count, recipe_id=recipe_id, allergy_info=allergy_info, update_recipe=update_recipe, update_recipe_ingredients=update_recipe_ingredients, title="Update Recipe | Submit")
     
 @app.route('/recipe/<recipe_name>/<recipe_id>')
 def recipe(recipe_name, recipe_id):
@@ -824,16 +800,6 @@ def recipe(recipe_name, recipe_id):
             user.viewed_recipe.append(recipe_result)
             recipe_result.views = recipe_result.views + 1
             db.session.commit()
-
-            """
-            A test account with a permenant not-viewed state necessary for
-            multiple tests in app_test.py
-            """
-            # if session["username"] == "testing-account-not-viewed-recipe":
-            #     db.engine.execute('DELETE FROM viewed_recipes WHERE user_ud = 55')
-            #     recipe_result.views = recipe_result.views - 1
-            #     db.session.commit()
-            #     print(recipe_result.views)
             
     allergies = ['is_gluten_free','is_vegan','is_vegetarian']
     allergy_info = {}
@@ -841,7 +807,7 @@ def recipe(recipe_name, recipe_id):
     temp_allergy = {}
     for allergy in allergies:
         # Change to FALSE for Heroku
-        allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe_result.id, allergy)).fetchall()
+        allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe_result.id, allergy)).fetchall()
         allergy_info[allergy] = allergy_res[0][0]
     
     filter_words = ["and", "with", "recipe", "on", "the", "&", "side", "of"]
@@ -849,6 +815,7 @@ def recipe(recipe_name, recipe_id):
     
     
     related_recipe_result = []
+    related_recipe_text = "Related Recipes"
     
     for word in recipe_result_name_list:
         temp_related = Recipe.query.filter(Recipe.name.like("%" + word + "%")).filter(Recipe.id != recipe_result.id)
@@ -856,23 +823,26 @@ def recipe(recipe_name, recipe_id):
             if len(related_recipe_result) > 2:
                 break
             if not temp_related in related_recipe_result:
-                # Does this if work?
                 related_recipe_result.append(temp_result)
+    
+    if len(related_recipe_result) < 2:
+        related_recipe_text = "Popular Recipes"
+        related_recipe_result = Recipe.query.order_by(Recipe.views.desc()).limit(3)
+        
     
     related_allergy_info = {}
     for counter, recipe in enumerate(related_recipe_result):  
         related_allergy_info[str(recipe.id)] = {}
         for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe.id, allergy)).fetchall()
             id_num = "id_" + str(recipe.id)
             related_allergy_info[str(recipe.id)][allergy] = allergy_res[0][0]
     
-    
-    # related_recipes = []
-    # while related_recipes > 3:
-    
+    title = ""
+    for word in recipe_result.name.split(' '):
+        title += word[0].upper() + word[1:] + " "
 
-    return render_template('recipe.html', user=user, related_recipe_result=related_recipe_result, related_allergy_info=related_allergy_info, recipe_result=recipe_result, ingredients_result=ingredients_result, allergy_info=allergy_info)
+    return render_template('recipe.html', user=user, related_recipe_text=related_recipe_text, related_recipe_result=related_recipe_result, related_allergy_info=related_allergy_info, recipe_result=recipe_result, ingredients_result=ingredients_result, allergy_info=allergy_info, title=title)
     
 @app.route('/account/my-recipes', methods=['POST', 'GET'])
 def account_my_recipes():
@@ -905,13 +875,13 @@ def account_my_recipes():
         else:
             flash("Password incorrect")
     
-    return render_template('account_my_recipes.html', all_recipes=all_recipes, user=user)
+    return render_template('account_my_recipes.html', all_recipes=all_recipes, user=user, title="My Account")
     
 @app.route('/register', methods=['POST', 'GET'])
 def register():
     
 
-    return render_template('register.html')
+    return render_template('register.html', title="Register")
     
 @app.route('/register_user', methods=['POST', 'GET'])
 def register_user():
@@ -938,7 +908,7 @@ def register_user():
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     
-    return render_template('login.html')
+    return render_template('login.html', title="Login")
     
 @app.route('/login_user', methods=['POST', 'GET'])
 def login_user():
