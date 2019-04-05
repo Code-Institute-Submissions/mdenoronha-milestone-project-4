@@ -256,55 +256,33 @@ Selecting edit option makes input editable | Successful
 Entering incorrect password fails account update and flashes message | Successful
 Entering correct password updates user information and flashes message | Successful
 
-
-
 Deployment
 ---------------
-Project has been deployed to Heroku and is accessible [here](https://riddles-game.herokuapp.com/).
+Project has been deployed to Heroku and is accessible [here](http://recipe-app-m4.herokuapp.com/).
 The process for deployment was as follows:
-
-* Clicked New to create a new repository on Github dashboard
-* Selected a repository name and clicked Create Repository
-* Within terminal, created a new repository using 'git init'
-* Added files to repository when necessary using 'git add' througout projects creation
-* Committing new changes using 'git commit'
-* Entering 'git remote add origin' with the Github URL
-* Push repository to Github
-* Create a new app in Heroku by clicking 'New' button on the dashboard
-* Choose an app name and clicked 'create app'
-* Clicked 'GitHub Connect to Github'
-* Selected the project's repository
-* Turned on automatic deploys automatic deploys
+* Clicked New and and Create New app on Heroku
+* Add an app name, location and click Add App
+* Log into Heroku via the terminal using $ heroku login
+* All instances of '= 0' in SQL statements need to be changed to '= false' for Heroku
+* Create a new git repository using $ git init
+* Connect to Heroku app using $ heroku git:remote -a recipe_app
 * Within the terminal created requirements.txt file with dependencies
 * Create Procfile to inform app.py is to be run
 * Update app's PORT and IP to correspond with Heroku
-* Added the changes to repository, committed them and pushed them Github
+* Add files to git using $ git add .
+* Commit files to git using $ git commit -m "Initial commit"
+* Push to Heroku using $ git push heroku master
 
 Credits
 ---------------
-* Assistance from [here](http://atodorov.org/blog/2013/01/28/remove-query-string-with-javascript-and-html5/) for removing URL parameters necessary for login modal
-* Assistance on favicon implementation with Flask from [here](https://webmasters.stackexchange.com/questions/25876/how-do-i-deploy-a-favicon-on-heroku)
-* [favicon-generator.org](https://www.favicon-generator.org/) used to create favicon
-* Riddles provided by [riddles.fyi](https://riddles.fyi) and [riddles.com](https://www.riddles.com)
-
-
-
-https://stackoverflow.com/questions/13620051/heroku-push-of-django-app-gets-no-module-named-psycopg2-extensions for psycopg2-binary in requirements.txt
-background photo tookapic from Canva
-vegan link - Mittmak from free photos
-logo icon by Canva
-vegetarian Photo by Anh Nguyen on Unsplash
-vegan Photo by Anna Pelzer on Unsplash
-gluten free Photo by Wesual Click on Unsplash
-Social icons - Canva
-
-To ask:
-color selector on select in add recipe
-image on dropdown
-
-Notes:
-check for all </img>
-first gluten free disappears after next/new ingred
-Change all user_ud to user_id
-Why did I use !important
-Check string limits
+* Assistance from [here](https://stackoverflow.com/questions/13620051/heroku-push-of-django-app-gets-no-module-named-psycopg2-extensions) for psycopg2-binary in requirements.txt
+* Assistance from [Flask documentation](http://flask.pocoo.org/docs/1.0/patterns/fileuploads/) for file upload verification
+* Assistance from [here](https://kite.com/python/docs/sqlalchemy.engine.result.ResultProxy) on working with ResultProxy 
+* Assistance from [here](https://stackoverflow.com/questions/19884900/how-to-pass-dictionary-from-jinja2-using-python-to-javascript) on passing dict from Python to JS
+* Assistance from CI tutor on save_profile_picture function to add image to S3 bucket
+* Homepage background photo provided by Canva
+* Social icons provided by Canva
+* Vegetarian Photo by Anh Nguyen on Unsplash
+* Vegan Photo by Anna Pelzer on Unsplash
+* Gluten free Photo by Wesual Click on Unsplash
+* Added recipe images and information provided by [Tesco Recipes](https://realfood.tesco.com/recipes.html)
