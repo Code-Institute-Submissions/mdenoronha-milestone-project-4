@@ -2,7 +2,7 @@
 
 
 <div class="recipe-header">
-    <img class="recipe-image" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{added_recipe['image_file_url']}}" alt="{{added_recipe['name']}}"></img>
+    <img class="recipe-image" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{added_recipe['image_file_url']}}" alt="{{added_recipe['name']}}">
     <h2 class="bottom-left">{% for name in added_recipe['name'].split(" ") %} {{name[0].upper() + name[1:]}} {% endfor %}</h2>
 </div>
 

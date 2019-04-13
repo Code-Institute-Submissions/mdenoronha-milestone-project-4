@@ -24,8 +24,7 @@
     <a href="recipe/{{recipe.name | replace(" ", "-")}}/{{recipe.id}}">
       <div class="card">
         <div class="card-image">
-            <!--<img class="recipe-image" src="{{ url_for('static', filename='imgs/background-image.png') }}" alt="{{recipe.name}}"></img>-->
-            <img class="recipe-image" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe.image_file}}" alt="{{recipe.name}}"></img>
+            <img class="recipe-image" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe.image_file}}" alt="{{recipe.name}}">
         </div>
         <div class="card-content recipe-title">
           <p>{% for name in recipe.name.split(" ")%}
@@ -74,13 +73,13 @@
 <div class="hide-on-small-only row allergy-links">
     <h2>Special Diets</h2>
     <div class="col s12 m4">
-        <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='gluten-free')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/gluten-free.jpg') }}" alt="gluten free recipes"><div class="allergy-text med">Gluten Free</div></img></a>
+        <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='gluten-free')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/gluten-free.jpg') }}" alt="gluten free recipes"><div class="allergy-text med">Gluten Free</div></a>
     </div>
     <div class="col s12 m4">
-        <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='vegan')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan.jpg') }}" alt="vegan recipes"><div class="allergy-text med">Vegan</div></img></a>
+        <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='vegan')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan.jpg') }}" alt="vegan recipes"><div class="allergy-text med">Vegan</div></a>
     </div>
     <div class="col s12 m4">
-        <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='vegetarian')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegetarian.jpg') }}" alt="vegetarian recipes"><div class="allergy-text med">Vegetarian</div></img></a>
+        <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='vegetarian')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegetarian.jpg') }}" alt="vegetarian recipes"><div class="allergy-text med">Vegetarian</div></a>
     </div>
 </div>
 
@@ -88,9 +87,9 @@
         <h2>Special Diets</h2>
     </div>
 <div class="show-on-small hide-on-med-and-up carousel">
-    <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='gluten-free')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/gluten-free.jpg') }}" alt="gluten free recipes"></img><div class="allergy-text">Gluten Free</div></a>
-    <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='vegan')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegetarian.jpg') }}" alt="vegetarian recipes"></img><div class="allergy-text">Vegan</div></a>
-    <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='vegetarian')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan.jpg') }}" alt="vegan recipes"></img><div class="allergy-text">Vegetarian</div></a>
+    <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='gluten-free')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/gluten-free.jpg') }}" alt="gluten free recipes"><div class="allergy-text">Gluten Free</div></a>
+    <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='vegan')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegetarian.jpg') }}" alt="vegetarian recipes"><div class="allergy-text">Vegan</div></a>
+    <a class="carousel-item" href="{{url_for('auto_search', filter_to_add='vegetarian')}}"><img class="allergy-link" src="{{ url_for('static', filename='imgs/vegan.jpg') }}" alt="vegan recipes"><div class="allergy-text">Vegetarian</div></a>
   </div>
 
 <div class="hidden"

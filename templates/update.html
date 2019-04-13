@@ -19,7 +19,7 @@
     <form method="POST" enctype="multipart/form-data">
         <!--Recipe Name-->
         <div class="input-field">
-            <input required placeholder="Chicken Carbonara" name="dish_name" id="name" type="text" class="validate" value="{{recipe.name}}">
+            <input maxlength="72" required placeholder="Chicken Carbonara" name="dish_name" id="name" type="text" class="validate" value="{{recipe.name}}">
             <label for="name">Dish Name</label>
         </div>
 
@@ -27,7 +27,7 @@
         <div class="input-field serves">
             <select name="serves" required>
                   <option disabled value=""></option>
-                  {% for option in range(0,4) %}
+                  {% for option in range(0,6) %}
                   {% if loop.index == recipe.serves %}
                   <option selected value="{{loop.index}}">{{loop.index}}</option>
                   {% else %}
@@ -81,7 +81,7 @@
                 <a class="change-recipe-image waves-effect waves-light btn">Change Image</a>
             </div>
             <div class="col s12 m7 l8">
-                <img class="materialboxed update-recipe-image" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe.image_file}}" alt="{{recipe.name}}"></img>
+                <img class="materialboxed update-recipe-image" src="https://s3.eu-west-2.amazonaws.com/recipe-db/static/recipe_images/{{recipe.image_file}}" alt="{{recipe.name}}">
 
 
                 <div class="input-recipe-image hidden">
@@ -94,6 +94,9 @@
                         <div class="file-path-wrapper">
                             <input class="file-path validate" type="text">
                         </div>
+                    </div>
+                    <div>
+                        <p>File requirements: .jpeg .jpg or .png format. Under 500kb.</p>
                     </div>
                 </div>
             </div>

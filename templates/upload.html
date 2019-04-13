@@ -17,7 +17,7 @@
     <form method="POST" enctype="multipart/form-data">
         <!--Recipe Name-->
         <div class="input-field">
-            <input  required placeholder="Chicken Carbonara" name="dish_name" id="name" type="text" class="validate" {% if "added_recipe" in session %} value="{{session["added_recipe"]["name"] }}"{% endif %}>
+            <input maxlength="72" required placeholder="Chicken Carbonara" name="dish_name" id="name" type="text" class="validate" {% if "added_recipe" in session %} value="{{session["added_recipe"]["name"] }}"{% endif %}>
             <label for="name">Dish Name</label>
         </div>
         <div class="input-field serves">
@@ -27,6 +27,8 @@
                   <option {% if "added_recipe" in session %} {% if session["added_recipe"]["serves"] == 2 %}selected{% endif %}{% endif %} value="2">2</option>
                   <option {% if "added_recipe" in session %} {% if session["added_recipe"]["serves"] == 3 %}selected{% endif %}{% endif %} value="3">3</option>
                   <option {% if "added_recipe" in session %} {% if session["added_recipe"]["serves"] == 4 %}selected{% endif %}{% endif %} value="4">4</option>
+                  <option {% if "added_recipe" in session %} {% if session["added_recipe"]["serves"] == 3 %}selected{% endif %}{% endif %} value="5">5</option>
+                  <option {% if "added_recipe" in session %} {% if session["added_recipe"]["serves"] == 4 %}selected{% endif %}{% endif %} value="6">6</option>           
                 </select>
             <label>Serves</label>
         </div>
@@ -67,7 +69,7 @@
         </div>
         <!--Method-->
         <div class="input-field">
-            <textarea required placeholder="Explain in detail how the recipe is cooked" name="method" id="method-input" class="materialize-textarea">{% if "added_recipe" in session %} {{session["added_recipe"]["method"] }}{% endif %}</textarea>
+            <textarea required placeholder="Explain in detail how the recipe is cooked" name="method" id="method-input" class="materialize-textarea">{% if "added_recipe" in session %}{{session["added_recipe"]["method"] }}{% endif %}</textarea>
             <label for="method-input">Method</label>
         </div>
         <!--Add limits to uploads-->
@@ -80,6 +82,9 @@
             <div class="file-path-wrapper">
                 <input class="file-path validate" type="text">
             </div>
+        </div>
+        <div>
+            <p>File requirements: .jpeg .jpg or .png format. Under 500kb.</p>
         </div>
         <button class="btn">NEXT</button>
     </form>
