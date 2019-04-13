@@ -297,7 +297,6 @@ def search_get():
     
     return render_template('search.html', allergy_info=allergy_info, result=result, search_term=search_term, pagination_num=pagination_num, page=page, title=title) 
     
-
 @app.route('/')
 def index():
     
