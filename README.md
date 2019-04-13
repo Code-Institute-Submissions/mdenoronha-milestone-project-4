@@ -10,7 +10,7 @@ UX
 ---------------
 The intended users are as follow:
 * Users interested in sharing their recipes with others
-    * Users are able to create an account and upload their recipes (method, ingredients, image, etc.) which are publically viewable
+    * Users are able to create an account and upload their recipes (method, ingredients, image, etc.) which are publicly viewable
 * Users looking to heavily promote their recipes to others
     * The site makes use of a view counter feature, which increments when a registered user views a recipe. For users looking to promote their recipe, being viewed by a large number of people, they can make use of this view counter and become a 'popular recipe' (which is featured more prominently on the site). 
 * Users who wish to store their recipes online for future reading
@@ -24,7 +24,7 @@ The intended users are as follow:
     * The site makes use of a related recipes feature, displaying similar recipes to the one the user is currently viewing. This feature can be used to find similar recipes to those the user has a preference for already
 * Users looking for recipes based on particular criteria:
 * Dietary/allergy information
-    * For users wishing to find recipes based on dietary/allergy information, the site makes use of vegan, vegatarian and gluten free search filters 
+    * For users wishing to find recipes based on dietary/allergy information, the site makes use of vegan, vegetarian and gluten free search filters 
 * Ingredients they have available
     * For users wishing to find recipes based on particular ingredients they have, the site makes use an ingredients search filter
 * The number of people they are required to serves
@@ -45,7 +45,7 @@ Features
 ---------------
 ### Existing Features ###
 *Creating a user*
-* Users are able to enter their name, and a username and password, to the regiuster form to create an account which is added to the database
+* Users are able to enter their name, and a username and password, to the register form to create an account which is added to the database
 * Other users are not able to register the same username, giving a unique account for users to make use of
 * Usernames are saved to a user's session, allowing them leave the site and return logged in (within limitations of session cookie)
 * Users are able to log out of their account by clicking the log out icon
@@ -75,7 +75,7 @@ Features
 
 *Deleting a recipe*
 * Once a recipe is added, users are able to delete the recipe at anytime by clicking the delete button on the recipe page
-* Only logged in users who own the recipe can successfuly delete it
+* Only logged in users who own the recipe can successfully delete it
 
 *Searching through recipes*
 * Users are able to search through all recipes from the search bar on the homepage and the search page.
@@ -85,7 +85,8 @@ Features
 * Message popups are used throughout (e.g. logging out, creating a recipe) to inform users of a successful/unsuccessful action
 
 ### Features Left to Implement ###
-* The related recipes feature makes use of basic recommendation functionality, filter recipes depending on whether they use the same keywords. As the related recipes list is completed once 3 recipes are found, related recipes based on keywords later in their title may be overlooked. Similarily, _more relevant_ recipes may be ignored. A more advanced recommendation feature can be implemented to overcome this.
+* The related recipes feature makes use of basic recommendation functionality, filter recipes depending on whether they use the same keywords. As the related recipes list is completed once 3 recipes are found, related recipes based on keywords later in their title may be overlooked. Similarly, _more relevant_ recipes may be ignored. A more advanced recommendation feature can be implemented to overcome this.
+* The site does not make use of secure authentication, with passwords being saved unencrypted. Secure authentication would be a beneficial feature to add.
 
 Technologies Used
 ---------------
@@ -104,30 +105,6 @@ Technologies Used
 * jQuery library was used to aid the creation of front end functionality
 * unittest was used to build the testing framework
 * flask_testing was used to aid testing framework and its connection to Flask app and database connection
-
-<!--Functionality-->
-<!------------------->
-<!--* At the homepage, users are encouraged to add a username in the register form-->
-<!--    * If this username hasn't been entered before, it is added to users.json using the add_user_to_leaderboard() method-->
-<!--    * If the username has been entered before, flash provides a message navigating users to the log in form-->
-<!--* As the user enters a username into the log in form:-->
-<!--    * If the username is present in users.json, the username is assigned to the user's session and on refreshing they are redirected to Questions Home-->
-<!--    * If the username is not present in users.json, flash provides a message informing the user that the username is not recognised-->
-<!--* On Questions Home, the user is assigned a current_qu_num attribute to their session-->
-<!--* On selecting New Game option, the user is directed to qu_new()-->
-<!--* On Questions New, the current_qu_num attribute is updated to the user's current question number (1) and all essential game attributes are reset to their starting values using reset_game_attributes() method-->
-<!--* On continuing the user is directed to /questions/1, as this corresponds with their current_qu_num they are not redirected away from this page-->
-<!--* As the user has not visited this question before, the question number is added to visited_questions attribute in the user's session-->
-<!--* datetime.now() is used to record the current time when the question was first seen. This will not re-run if the user visits the page again as the question number is present in visited_questions-->
-<!--* The question the user is currently on increases by, saved in the current_qu_num attribute-->
-<!--* When the user answers the riddle and makes a POST request, the time is recorded and the difference between the start and end time is added to the total-time attribute on the user's session-->
-<!--* All possible answers (present in riddles.json) are iterated over, if the user's input matches one their score (saved to their session) is incremented by one-->
-<!--* correct is updated with whether they were correct or not, this is used by question.html to display the appropriate message-->
-<!--* The next question link is updated to take the user to their current_qu_num. If current_qu_num is 6, the game is over and the user is directed to Questions End-->
-<!--* If the user leaves at any point before the game is over, the Leaderboard option on Questions Home changes to a Continue Game option - taking the user to their current_qu_num or Questions End-->
-<!--* At Questions End, users.json is loaded and the user is added to the file (if their score and total_time is better than their last attempt)-->
-<!--* render_leaderboard() is run which sorts all users by score, and then by total time. The top 25 are then selected and assigned to top_users-->
-<!--* The relevant HTML file displays top_users as a table-->
 
 Testing
 ---------------
@@ -163,7 +140,7 @@ Test  | Status
 ------------- | -------------
 Homepage |
 The autocomplete search bar on the homepage displays suggestions based on user input | Successful
-Selecting an autocomeplete option takes user to the relevant recipe page | Successful
+Selecting an autocomplete option takes user to the relevant recipe page | Successful
 The Special Diets section becomes a slider on mobile and can be utilised | Successful
 Search |
 The MaterializeCSS chips functionality on the ingredients input can be utilised as intended | Successful
@@ -172,7 +149,7 @@ The MaterializeCSS time slider works as intended | Successful
 Changing the MaterializeCSS chips updates a hidden input | Successful
 Changing the MaterializeCSS serves slider updates a hidden input | Successful
 Changing the MaterializeCSS ingredients updates a hidden input | Successful
-Selecing the vegan option in recipe type also selects vegetarian | Successful
+Selecting the vegan option in recipe type also selects vegetarian | Successful
 Selecting the vegetarian option when the vegan option is selected removes the vegan option | Successful
 The filters section becomes a collapsible section on mobile | Successful
 The reset filters option becomes selectable when any of the filters are not at the default position | Successful
@@ -192,7 +169,7 @@ The amount and ingredient results match the recipe_ingredients table | Successfu
 If available, 2-3 recipes with matching keywords are visible in the related recipes section with a 'Related Recipes' title | Successful
 If not available, the top 3 most viewed recipes are visible with a 'Popular Recipes' title | Successful
 If the recipe belongs to the user, the edit and delete option is available | Successful
-Selecing the update recipe option takes the user to update-recipe of the relevant recipe | Successful
+Selecting the update recipe option takes the user to update-recipe of the relevant recipe | Successful
 Selecting delete recipe and confirming removes the recipe and ingredients from the database | Successful
 Register |
 Entering user details and submitting creates a relevant record in the database | Successful
@@ -222,11 +199,11 @@ If all added ingredients are marked vegan, vegan result is active | Successful
 If all added ingredients are marked gluten free, gluten free result is active | Successful
 The method result matches the added recipe's record | Successful
 The amount and ingredient results match the added recipe_ingredients records | Successful
-Clicking submit adds information to databse | Successful
+Clicking submit adds information to database | Successful
 Update Recipe - Info |
 Inputs are prefilled with relevant recipe information | Successful
 Clicking Change Image shows input | Successful
-Clicking cancel hides input and shows origianl image | Successful
+Clicking cancel hides input and shows original image | Successful
 Uploading an incorrect file type fails upload and flashes message | Successful
 Uploading a file over 500kb fails upload and flashes message | Successful
 Adding details and submitting adds information to session | Successful
@@ -247,7 +224,7 @@ If all updated ingredients are marked vegan, vegan result is active | Successful
 If all updated ingredients are marked gluten free, gluten free result is active | Successful
 The method result matches the updated recipe's record | Successful
 The amount and ingredient results match the updated recipe_ingredients records | Successful
-Clicking submit updates record in the databse | Successful
+Clicking submit updates record in the database | Successful
 My Account | 
 Clicking Add New takes user to add recipe - info page | Successful
 My Recipe dropdown shows all recipes belonging to user | Successful
