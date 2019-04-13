@@ -1,18 +1,26 @@
-// For document.ready
 $(document).ready(function() {
+    // Initialise modal
     $('.modal').modal();
+    // Initialise dropdowns
     $('.dropdown-trigger').dropdown();
+    // Initialise carousel
     $('.carousel').carousel({
         dist: 0,
         padding: 50,
         noWrap: true,
     });
+    // Initialise sidenav
     $('.sidenav').sidenav();
+    // Initialise floating buttons
     $('.fixed-action-btn').floatingActionButton();
+    // Initialise collapsible section
     $('.collapsible').collapsible();
+    // Initialise form select fiels
     $('select').formSelect();
+    // Initialise material box
     $('.materialboxed').materialbox();
-
+    
+    // If flash alert is sent from app, appears with Toast
     if ($('#alert-text').data("alert") != "") {
         var alert_data = $('#alert-text').data("alert")
         var alert_data_list = eval(alert_data)
@@ -25,11 +33,9 @@ $(document).ready(function() {
 });
 
 
-
-
-// Alert
-
 // My account
+
+// Change account details submit button and password to be usable
 function account_details_change() {
     $('.account-details-submit').removeClass('disabled')
     $('.account-changes-message').removeClass('hidden')
@@ -37,6 +43,7 @@ function account_details_change() {
     $('#current-password').removeAttr('disabled')
 }
 
+// Change account details field to be usable
 $('.edit-last-name').on('click', function() {
     $('#last-name').removeAttr('disabled')
     account_details_change()
@@ -59,6 +66,7 @@ $('.edit-password').on('click', function() {
 
 var elem = $(".autocomplete")
 
+// Highlight search button on input
 $('.autocomplete').on('input', function() {
     if ($(this).val() != "") {
         $('.search-button').addClass('active-button')
@@ -69,7 +77,7 @@ $('.autocomplete').on('input', function() {
 })
 
 
-
+// Add featured heading to autocomplete dropdown
 $("body").on('DOMSubtreeModified', elem, function() {
     if ($('ul.autocomplete-content li').length >= 1) {
         if ($('ul.autocomplete-content p:first').attr("id") != "featured-heading") {
@@ -80,7 +88,7 @@ $("body").on('DOMSubtreeModified', elem, function() {
 });
 
 // Search Page
-
+// Initialises serves slider in search filters
 if ($('#serves-slider')[0]) {
     var data_element = $('#search-data-set')
 
@@ -101,17 +109,19 @@ if ($('#serves-slider')[0]) {
 
         })
     });
-
+    
     var serves_slider = $('#serves-slider')[0];
     var serves_slider_value = $('#serves-slider-value')[0];
-
+    
+    // Set sliders to values set in session (and outputted to data element)
     serves_slider.noUiSlider.set([
         data_element.data("lower-slider-serves"),
         data_element.data("upper-slider-serves")
     ])
 
     $("#serves-slider-value-input").val(serves_slider_noUiSlider.get());
-
+    
+    // Updates input to the same as slider value so it can be used in form post
     serves_slider_noUiSlider.on("change", function() {
         $("#serves-slider-value-input").val(serves_slider_noUiSlider.get());
     });
@@ -120,7 +130,8 @@ if ($('#serves-slider')[0]) {
     serves_slider.noUiSlider.on('update', function(values) {
         serves_slider_value.innerHTML = values.join(' - ');
     });
-
+    
+    // Initialises time slider in search filters
     var time_slider_noUiSlider = noUiSlider.create($('#time-slider')[0], {
         start: [10, 180],
         connect: true,
@@ -140,14 +151,16 @@ if ($('#serves-slider')[0]) {
 
     var time_slider = $('#time-slider')[0];
     var time_slider_value = $('#time-slider-value')[0];
-
+    
+    // Set sliders to values set in session (and outputted to data element)
     time_slider.noUiSlider.set([
         data_element.data("lower-slider-time"),
         data_element.data("upper-slider-time")
     ])
 
     $("#time-slider-value-input").val(time_slider_noUiSlider.get());
-
+    
+     // Updates input to the same as slider value so it can be used in form post
     time_slider_noUiSlider.on("change", function() {
         $("#time-slider-value-input").val(time_slider_noUiSlider.get());
     });
@@ -157,7 +170,8 @@ if ($('#serves-slider')[0]) {
     });
 
     var chips_data = data_element.data("chips")
-
+    
+    // Retrieves list of 'chips' saved in session (and outputted to data element)
     var chips_split = chips_data.split(",")
     var chips_array = []
     if (chips_data) {
@@ -166,7 +180,8 @@ if ($('#serves-slider')[0]) {
             chips_array.push(temp_object)
         }
     }
-
+    
+    // Initialises chips field
     $('.ingredients-chips').chips({
         placeholder: 'e.g. Chicken',
         // data_element.data("chips")
@@ -178,7 +193,7 @@ if ($('#serves-slider')[0]) {
             var ingredients_chips_object = ingredients_chips_instance.chipsData
 
             $(".ingredient-warning-message").addClass('hidden')
-
+            // If incorrect character is used, delete 'chip' and display warning message
             for (key in ingredients_chips_object) {
                 var value = ingredients_chips_object[key]['tag'];
                 if (/[^a-zA-Z ]/.test(value)) {
@@ -195,7 +210,8 @@ if ($('#serves-slider')[0]) {
             if_default()
         }
     });
-
+    
+    // Updates input to the same as chips value so it can be used in form post
     function update_ingredients_input() {
         var ingredients_chips_instance = M.Chips.getInstance($('.ingredients-chips'));
         var chips = [];
@@ -207,7 +223,8 @@ if ($('#serves-slider')[0]) {
     }
 
     update_ingredients_input()
-
+    
+    // Check if filters are set to default and update page accordingly
     function if_default() {
         if ($('#ingredients-chips-value-input').val() == "" &&
             !$(".vegan").is(':checked') &&
@@ -228,7 +245,8 @@ if ($('#serves-slider')[0]) {
     }
 
     if_default()
-
+    
+    // On filters change, check if filters are set to default
     $(".master-filter").on("change", function() {
         if_default()
     })
@@ -240,7 +258,8 @@ if ($('#serves-slider')[0]) {
     $('.serves-type').on('click', function() {
         if_default()
     });
-
+    
+    // On reset filters click, set filters to default
     $('.reset-filters').on('click', function() {
         $('#ingredients-chips-value-input').val("")
         $('.vegan').prop('checked', false);
@@ -256,13 +275,13 @@ if ($('#serves-slider')[0]) {
 
         var ingredients = M.Chips.getInstance($(".ingredients-chips"))
         var ingredients_length = ingredients.chipsData.length
-        console.log(ingredients_length)
         for (i = 0; i < ingredients_length; i++) {
             ingredients.deleteChip(ingredients_length - 1 - i)
         }
         if_default()
     })
-
+    
+    // If vegan is checked, check vegetarian
     $(".vegan").change(function() {
         if (this.checked) {
             $(".vegetarian").prop("checked", true)
@@ -276,7 +295,8 @@ if ($('#serves-slider')[0]) {
     })
 
     var $window = $(window)
-
+    
+    // Show collapsible filter on small screen sizes
     function resize() {
         if ($window.width() < 600) {
             $('.collapsible-header').removeClass('hidden');
@@ -305,7 +325,7 @@ if (data_element_index) {
     })
 }
 
-
+// Initialise autocomplete with data element's values
 $('input.autocomplete').autocomplete({
     data: data_element_no_values,
     limit: 7,
@@ -318,6 +338,7 @@ $('input.autocomplete').autocomplete({
 
 // Change recipe info
 
+// Show/hide currently used recipe image
 $(".change-recipe-image").on('click', function() {
     if ($(".input-recipe-image").hasClass(("hidden"))) {
         $(this).html("Cancel");
@@ -336,6 +357,7 @@ $(".change-recipe-image").on('click', function() {
 
 // Add recipe info page
 
+// On input change, add class for styling
 $('select[name="serves"]').on('change', function() {
     $('.input-field.serves input').addClass('valid-input')
     $('.input-field.serves label').addClass('valid-label')
@@ -361,6 +383,8 @@ $('input[type="file"]').on('change', function() {
 
 var file_input = $('#file-input')
 
+// Reject files under 500kb
+
 file_input.on("change", function() {
     if (this.files[0].size > 500000 ) {
         M.toast({ html: "Only files under 500kb can be uploaded" })
@@ -370,6 +394,7 @@ file_input.on("change", function() {
 
 // Update/add ingredients page
 
+// Add name incrementing name attributes to checkboxes
 function update_checkbox_name() {
     check = $('input[type="checkbox"]')
     check.removeAttr('name')
@@ -386,6 +411,7 @@ function update_checkbox_name() {
     }
 }
 
+// Limit additional ingredient sections to 20
 function ingredients_limit() {
     ingredients = $('.ingredient-inputs')
     if (ingredients.length > 20) {
@@ -395,6 +421,8 @@ function ingredients_limit() {
         $(".add-recipe").attr('disabled', false);
     }
 }
+
+// On add ingredient click, add ingredient section
 
 $('.add-recipe:not([disabled])').on("click", function() {
     $(".example-ingredient").clone().removeClass("example-ingredient").addClass("temp-class").appendTo(".ingredient-form")
@@ -409,12 +437,14 @@ $('.add-recipe:not([disabled])').on("click", function() {
     ingredients_limit()
 })
 
+// On delete ingredient click, delete ingredient section
 $(".add-ingredient-container").on("click", '.delete-recipe', function() {
     $(this).closest($(".ingredient-inputs")).remove()
     update_checkbox_name()
     ingredients_limit()
 })
 
+// When vegan is selected, select vegetarian
 $(".add-ingredient-container").on("click", '.vegan', function() {
     if ($(this).is(':checked')) {
         $(this).closest($(".ingredient-allergy-info")).find(".vegetarian").prop("checked", true)
