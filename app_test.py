@@ -51,7 +51,6 @@ class RecipeTests(TestCase):
     # Test Homepage 200
     def test_home_200_response(self):
         with app.test_client() as client:
-            
             result = client.get("/")
             self.assertEqual(result.status_code, 200)
     
@@ -83,7 +82,7 @@ class RecipeTests(TestCase):
     def test_add_info_200_response(self):
         with app.test_client() as client:
             with client.session_transaction() as sess:
-                sess["username"] = "TESTINGNAME"
+                sess["username"] = "testing-account-viewed-recipe"
             result = client.get("/add-recipe/info")
             self.assertEqual(result.status_code, 200)
     
@@ -91,7 +90,7 @@ class RecipeTests(TestCase):
     def test_add_ingredients_200_response(self):
         with app.test_client() as client:
             with client.session_transaction() as sess:
-                sess["username"] = "TESTINGNAME"
+                sess["username"] = "testing-account-viewed-recipe"
                 sess["added_recipe"] = test_added_recipe
             result = client.get("/add-recipe/ingredients")
             self.assertEqual(result.status_code, 200)
@@ -100,7 +99,7 @@ class RecipeTests(TestCase):
     def test_add_submit_200_response(self):
         with app.test_client() as client:
             with client.session_transaction() as sess:
-                sess["username"] = "jmccroary0"
+                sess["username"] = "jmccroary0dfw"
                 sess["added_recipe"] = test_added_recipe
                 sess["added_recipe_ingredients"] = test_added_ingredients
             result = client.get("/add-recipe/submit")
@@ -110,7 +109,7 @@ class RecipeTests(TestCase):
     def test_update_info_200_response(self):
         with app.test_client() as client:
             with client.session_transaction() as sess:
-                sess["username"] = "jmccroary0"
+                sess["username"] = "jmccroary0dfw"
             result = client.get("/update-recipe/info/13")
             self.assertEqual(result.status_code, 200)
     
@@ -118,7 +117,7 @@ class RecipeTests(TestCase):
     def test_update_ingredients_200_response(self):
         with app.test_client() as client:
             with client.session_transaction() as sess:
-                sess["username"] = "jmccroary0"
+                sess["username"] = "jmccroary0dfw"
                 sess["update_recipe"] = test_added_recipe
             result = client.get("/update-recipe/ingredients/13")
             self.assertEqual(result.status_code, 200)
@@ -127,7 +126,7 @@ class RecipeTests(TestCase):
     def test_update_submit_200_response(self):
         with app.test_client() as client:
             with client.session_transaction() as sess:
-                sess["username"] = "jmccroary0"
+                sess["username"] = "jmccroary0dfw"
                 sess["update_recipe"] = test_added_recipe
                 sess["update_recipe_ingredients"] = test_added_ingredients
             result = client.get("/update-recipe/submit/13")
