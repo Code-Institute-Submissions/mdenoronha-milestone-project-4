@@ -1,8 +1,6 @@
 from flask import Flask, render_template, redirect, request, url_for, send_file, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
-# Needed?
-# from sqlalchemy import or_, and_
 import os
 import json
 from flask_s3 import FlaskS3
@@ -24,6 +22,8 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 s3 = FlaskS3(app)
 db = SQLAlchemy(app)
 
+
+# Create list of paginated pages with active number in middle where possible
 def create_pagination_num(total_pages, page):
     
     pagination_num = []
@@ -36,26 +36,14 @@ def create_pagination_num(total_pages, page):
     
                     pagination_num.insert(0, total_pages - counter)
             break
-        # Added to ensure active number is in middle of pagination where possible
         else:
             if page + counter - 2 > 0 and page + counter - 2 < total_pages:
                 pagination_num.append(int(page + counter - 2))
-                
+    
     return pagination_num
-    
+
+# Returns recipes from db filtered using search term and recipes filters   
 def return_search(filters, search_term, page):
-    # Recipe_type is a list of filters a user has selected
-    # search_term is the search string a user has inputted
-    # page is the current page in the pagination a user is on
-    
-    # Don't need to check as filters will always be there?
-    # if not filters["recipe_type"] and not filters["difficulty_type"]:
-    #     checkboxes = [None, None, None]
-    #     result = (Recipe.query
-    #     .filter(Recipe.name.contains(search_term))
-    #     .order_by(Recipe.views.desc())
-    #     .paginate(page, 6, False))
-    # else:
 
     filter_list_for_recipe_type = []
     for filter_res in filters["recipe_type"]:
@@ -91,13 +79,22 @@ def return_search(filters, search_term, page):
             
     return result
     
-# http://flask.pocoo.org/docs/1.0/patterns/fileuploads/
+"""
+Check to see if uploaded file type is in ALLOWED_EXTENSIONS
+Assistance from Flask documentation at
+http://flask.pocoo.org/docs/1.0/patterns/fileuploads/
+"""
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
     
-# Assistance for function provided by CI tutor
+"""
+Takes recipe image file, renames with random string and adds to S3 bucket
+Assistance for function provided by CI tutor
+"""
+
 def save_profile_picture(form_picture):          
     random_hex = ''.join([random.choice(string.digits) for n in range(8)])    
     _, f_ext = os.path.splitext(form_picture.filename)  
@@ -107,17 +104,20 @@ def save_profile_picture(form_picture):
     
     return picture_fn 
 
+# Table for recipes and relevant ingredients
 recipe_ingredients = db.Table('recipe_ingredients',
     db.Column('recipe_id', db.Integer, db.ForeignKey('recipe.id')),
     db.Column('ingredients_id', db.Integer, db.ForeignKey('ingredients.id')),
 )
 
+# Table for recipes and users who have viewed
 viewed_recipes = db.Table('viewed_recipes',
     db.Column('recipe_id', db.Integer, db.ForeignKey('recipe.id')),
     # Change to user_id when database is updated
     db.Column('user_ud', db.Integer, db.ForeignKey('user.id')),
 )
 
+# Table for recipes
 class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
@@ -134,7 +134,8 @@ class Recipe(db.Model):
 
     def __repr__(self):
         return '<Recipe %r>' % (self.id)
-        
+  
+# Table for ingredients  
 class Ingredients(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(80), nullable=False)
@@ -145,7 +146,8 @@ class Ingredients(db.Model):
     
     def __repr__(self):
         return '<Ingredients %r>' % self.name
-        
+
+# Table for users   
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(80), nullable=False)
@@ -158,9 +160,14 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
+"""
+Applies default filters to session with additional custom recipe_type filter. 
+Used when linking to a search page with specific recipes filtered (e.g. all vegan)
+"""
+
 @app.route('/auto-search/<filter_to_add>')
 def auto_search(filter_to_add):
-    
+    # Sets user search filters to default (with url parameter as recipe type)
     session["filters"] = {
             'difficulty_type': [u'easy', u'medium', u'hard'], 
             'recipe_type': [filter_to_add], 
@@ -181,9 +188,8 @@ def search_post():
     
     page = request.args.get('page', 1, type=int)
     
-    # filters
     filters = {}
-    # Get form data
+    # Get form data for search filter
     try:
         recipe_type = request.form.getlist('recipe-type')
         difficulty_type = request.form.getlist('difficulty-type')
@@ -191,23 +197,25 @@ def search_post():
         time_value = request.form["time-value"]
         ingredients_value = request.form["ingredients-value"].lower()
     except KeyError:
+        # If error, reset to default search
         recipe_type = []
         difficulty_type = [u'easy', u'medium', u'hard']
         serves_value = "1,6"
         time_value = "10,180"
         ingredients_value = ""
         
-    # Ingredients
+    # Take Ingredients from form and apply to filters dict 
     if not ingredients_value:
         filters["ingredients"] = []
     else:
         ingredients_value_list = [ingredients_value][0].split(',')
         filters["ingredients"] = ingredients_value_list
-    # Serves
+    
+    # Take Serves from form and apply to filters dict 
     serves_value_list = [serves_value][0].split(',')
     filters["serves"] = serves_value_list
     
-    # Time
+    # Take Time from form and apply to filters dict 
     time_value_list = [time_value][0].split(',')
     filters["time"] = time_value_list
     
@@ -215,11 +223,13 @@ def search_post():
     recipe_type_list = []
     difficulty_list = []
     
+    # Take Recipe_type from form and apply to filters dict 
     for r in recipe_type:
         recipe_type_list.append(r)
     # If there is no recipe_type, session will show as empty
     filters["recipe_type"] = recipe_type_list
     
+    # Take Difficulty from form and apply to filters dict 
     for difficulty in difficulty_type:
         difficulty_list.append(difficulty)
     # If there is no recipe_type, session will show as empty
@@ -227,16 +237,18 @@ def search_post():
     
     # Apply all filters to session
     session["filters"] = filters
-    
-    # submission_test = request.form["submission-test"]
-    # session["submission_test"] = submission_test
+
     
     return redirect(url_for('search_get'))
 
 # Split into Post/Redirect/Get to remove Confirm Form Submission message
 @app.route('/search', methods=["GET"])
 def search_get():
+    
+    # Find current page to aid with pagination
     page = request.args.get('page', 1, type=int)
+    
+    # If session doesn't contain filter, reset to default
     if "filters" not in session:
         session["filters"] = {
             'difficulty_type': [u'easy', u'medium', u'hard'], 
@@ -245,15 +257,23 @@ def search_get():
             'serves': [u'1', u'6'], 
             'ingredients': []
         }
+    
+    # If session doesn't contain search term, reset to no search
     if not "search_term" in session:
         session["search_term"] = ""
     search_term = session["search_term"]
     
+    # Return records from the database
     result = return_search(session["filters"], session["search_term"], page)
     
+    # Find total pages and pagination numbers from result object
     total_pages = result.pages
     pagination_num = create_pagination_num(total_pages, page)
     
+    """
+    Loop through each result and find relational ingredients records - to identify
+    if the record meets allergy requirements.
+    """
     allergies = ['is_gluten_free','is_vegan','is_vegetarian']
     search_recipes = []
     allergy_info = {}
@@ -262,75 +282,22 @@ def search_get():
     for res in result.items:
       search_recipes_ids.append(res.id)
 
-
-
     for recipe in search_recipes_ids:
         temp_recipe = Recipe.query.filter_by(id=recipe).first()
         search_recipes.append(temp_recipe)
         temp_allergy = {}
         for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe, allergy)).fetchall()
+            # Returns boolean for allergy restrictive status of ingredients
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
             temp_allergy[allergy] = allergy_res[0][0]
         allergy_info[recipe] = temp_allergy
         
+    # Page title
     title = "Search Recipes: %s" % search_term
     
     return render_template('search.html', allergy_info=allergy_info, result=result, search_term=search_term, pagination_num=pagination_num, page=page, title=title) 
     
-@app.route('/search', methods=['POST', 'GET'])
-def search():
-    
-    page = request.args.get('page', 1, type=int)
-    
-    checkboxes = [None, None, None]
-    
-    if request.method == "POST":
-        search_term = request.form["search"] 
-        session["search_term"] = search_term
-        
-        recipe_type = request.form.getlist('recipe-type')
-        session["recipe_type"] = recipe_type
-        
-        result = return_search(recipe_type, search_term, 1)
 
-        
-        total_pages = result.pages
-        pagination_num = create_pagination_num(total_pages, page)
-        
-        allergies = ['is_gluten_free','is_vegan','is_vegetarian']
-        search_recipes = []
-        allergy_info = {}
-        
-        search_recipes_ids = []
-        for res in result.items:
-          search_recipes_ids.append(res.id)
-        
-        for recipe in search_recipes_ids:
-            temp_recipe = Recipe.query.filter_by(id=recipe).first()
-            search_recipes.append(temp_recipe)
-            temp_allergy = {}
-            for allergy in allergies:
-                allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe, allergy)).fetchall()
-                temp_allergy[allergy] = allergy_res[0][0]
-            allergy_info[recipe] = temp_allergy
-        
-
-    else:
-        result = None
-        search_term = None 
-        allergy_info = None
-        next_url = None
-        prev_url = None
-        pagination_num = []
-    
-    
-        # test = Recipe.query.filter(~Recipe.ingredients.any(Ingredients.is_vegan == True))
-        # Check to see if returned recipes have nutritional requirements
-
-    
-    # checkboxes=checkboxes, make session
-    return render_template('search.html', allergy_info=allergy_info, result=result, checkboxes=checkboxes, search_term=search_term, pagination_num=pagination_num, page=page)
-    
 @app.route('/')
 def index():
     
@@ -366,7 +333,7 @@ def index():
         
     #     temp_allergy = {}
     #     for allergy in allergies:
-    #         allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe, allergy)).fetchall()
+    #         allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
     #         temp_allergy[allergy] = allergy_res[0][0]
     #     allergy_info[recipe] = temp_allergy
 
@@ -375,7 +342,7 @@ def index():
     for recipe in featured_recipes:
         temp_allergy = {}
         for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe.id, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
             temp_allergy[allergy] = allergy_res[0][0]
         allergy_info[recipe.id] = temp_allergy
             
@@ -550,7 +517,7 @@ def add_recipe_ingredients():
 
         return redirect(url_for('add_recipe_submit'))
     
-    # temp_recipe = Recipe(name=name,image_file=image_file_url,serves = serves,difficulty=difficulty,time=time,views = false,method = method,user_id = 1)
+    # temp_recipe = Recipe(name=name,image_file=image_file_url,serves = serves,difficulty=difficulty,time=time,views = 0,method = method,user_id = 1)
     # db.session.add(temp_recipe)
     # db.session.commit()
     
@@ -620,7 +587,7 @@ def update_recipe_ingredients(recipe_id):
     
         return redirect(url_for('update_recipe_submit', recipe_id=recipe_id))
     
-    # temp_recipe = Recipe(name=name,image_file=image_file_url,serves = serves,difficulty=difficulty,time=time,views = false,method = method,user_id = 1)
+    # temp_recipe = Recipe(name=name,image_file=image_file_url,serves = serves,difficulty=difficulty,time=time,views = 0,method = method,user_id = 1)
     # db.session.add(temp_recipe)
     # db.session.commit()
     
@@ -807,7 +774,7 @@ def recipe(recipe_name, recipe_id):
     temp_allergy = {}
     for allergy in allergies:
         # Change to FALSE for Heroku
-        allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe_result.id, allergy)).fetchall()
+        allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe_result.id, allergy)).fetchall()
         allergy_info[allergy] = allergy_res[0][0]
     
     filter_words = ["and", "with", "recipe", "on", "the", "&", "side", "of"]
@@ -834,7 +801,7 @@ def recipe(recipe_name, recipe_id):
     for counter, recipe in enumerate(related_recipe_result):  
         related_allergy_info[str(recipe.id)] = {}
         for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe.id, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
             id_num = "id_" + str(recipe.id)
             related_allergy_info[str(recipe.id)][allergy] = allergy_res[0][0]
     
@@ -865,6 +832,10 @@ def account_my_recipes():
             if 'last_name' in request.form:
                 temp_user.last_name = request.form["last_name"]
             if 'username' in request.form:
+                same_username_result = Recipe.query.filter(func.lower(User.username) == func.lower(request.form["username"])).first()
+                if same_username_result:
+                    flash('An account with the same username already exists')
+                    return redirect(url_for('account_my_recipes'))
                 temp_user.username = request.form["username"]
                 session['username'] = request.form["username"]
             if 'password' in request.form:
@@ -893,6 +864,7 @@ def register_user():
     
 
     if User.query.filter_by(username=username).count() > 0:
+        flash("A user by this username already exists")
         return redirect(url_for('register'))
     else:
         session["username"] = username
@@ -921,12 +893,15 @@ def login_user():
     try:
         user.username
     except AttributeError:
+        flash('Incorrect user credentials')
         return redirect(url_for('login'))
     
     if str(user.password) == str(password):
         session["username"] = username
+        flash('Successfully Logged in')
         return redirect(url_for('index'))
     else: 
+        flash('Incorrect user credentials')
         return redirect(url_for('login'))
         
 @app.route('/logout')
@@ -942,4 +917,3 @@ if __name__ == '__main__':
             port=int(os.environ.get('PORT')),
             debug=True)
             
-# add 404 for missing queries http://flask-sqlalchemy.pocoo.org/2.3/queries/#queries-in-views
