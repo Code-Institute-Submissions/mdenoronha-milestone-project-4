@@ -300,47 +300,41 @@ def search_get():
 @app.route('/')
 def index():
     
-    # Dealing with ResultProxy help https://kite.com/python/docs/sqlalchemy.engine.result.ResultProxy
-    # Average view count
-    total_views = db.engine.execute('SELECT SUM(views), COUNT(views) FROM Recipe WHERE views > 0;')
-    view_data = total_views.fetchone()
-    average_views = view_data[0] / view_data[1]
-
-    recipe_names = Recipe.query.filter(Recipe.views > average_views).all()
+    # Working with ResultProxy assistance from https://kite.com/python/docs/sqlalchemy.engine.result.ResultProxy
+    
+    """
+    Returns top 20 recipes by view count and adds to dict ready to input into
+    page for javascript to retrieve
+    """
+    top_recipes = Recipe.query.order_by(Recipe.views.desc()).limit(20).all()
     recipe_dict = {}
-    for recipe in recipe_names:
-        # recipe_dict.update({recipe.name:recipe.id})
+    for recipe in top_recipes:
         recipe_dict.update({recipe.name: recipe.id})
-    # https://stackoverflow.com/questions/19884900/how-to-pass-dictionary-from-jinja2-using-python-to-javascript
+    """
+    Assistance on passing Python dictionary to javascrip from 
+    https://stackoverflow.com/questions/19884900/how-to-pass-dictionary-from-jinja2-using-python-to-javascript
+    """
     recipe_object = (json.dumps(recipe_dict)
     .replace(u'<', u'\\u003c')
     .replace(u'>', u'\\u003e')
     .replace(u'&', u'\\u0026')
     .replace(u"'", u'\\u0027'))
-    
-    # Altering the homepage 
+
     allergies = ['is_gluten_free','is_vegan','is_vegetarian']
-    featured_recipes_ids = [1, 2, 3, 4]
     featured_recipes = []
     allergy_info = {}
-
     
-    # for recipe in featured_recipes_ids:
-    #     temp_recipe = Recipe.query.filter_by(id=recipe).first()
-    #     featured_recipes.append(temp_recipe)
-        
-        
-    #     temp_allergy = {}
-    #     for allergy in allergies:
-    #         allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe, allergy)).fetchall()
-    #         temp_allergy[allergy] = allergy_res[0][0]
-    #     allergy_info[recipe] = temp_allergy
-
+    # Returns top 4 recipes to be featured on homepage
     featured_recipes = Recipe.query.order_by(Recipe.views.desc()).limit(4).all()
-
+    
+    """
+    Loop through each result and find relational ingredients records - to identify
+    if the record meets allergy requirements.
+    """
     for recipe in featured_recipes:
         temp_allergy = {}
         for allergy in allergies:
+            # Returns boolean for allergy restrictive status
             allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
             temp_allergy[allergy] = allergy_res[0][0]
         allergy_info[recipe.id] = temp_allergy
@@ -350,12 +344,14 @@ def index():
 @app.route('/delete/<recipe_id>')
 def delete_recipe(recipe_id):
     
+    # Check if user is logged in
     if not session:
         return redirect(url_for('index'))
         
     if not 'username' in session:
         return redirect(url_for('index'))
-        
+    
+    # Check if recipe belongs to user
     user = User.query.filter_by(username=session["username"]).first()
     
     recipe = Recipe.query.filter_by(id=recipe_id).first()
@@ -364,10 +360,12 @@ def delete_recipe(recipe_id):
         flash("You may only delete recipes you own")
         return redirect(url_for('account_my_recipes'))
     
+    # Deletes recipe record
     Recipe.query.filter_by(id=recipe_id).delete()
     
     db.session.commit()
     
+    # Deletes associated ingredients
     delete_str = "DELETE FROM recipe_ingredients WHERE recipe_id = %s ;" % recipe_id
     db.engine.execute(delete_str)
     
@@ -377,6 +375,7 @@ def delete_recipe(recipe_id):
 @app.route('/add-recipe/info', methods=['POST', 'GET'])
 def add_recipe_info():
     
+    # Check if user is logged in
     if not session:
         return redirect(url_for('register'))
         
@@ -384,20 +383,24 @@ def add_recipe_info():
         return redirect(url_for('register'))
     
     if request.method == 'POST':
+        # Retrieves images from form
         recipe_picture = request.files['inputFile']
         
+        # Check to ensure file is supported filetype
         if not allowed_file(recipe_picture.filename):
             flash("Uploaded files can only be .jpeg .jpg or .png format")
             return redirect(url_for('add_recipe_info'))
         
-        # Add check to see if recipe name has been added before
+        # Check to see if recipe name has been added before
         same_name_result = Recipe.query.filter(func.lower(Recipe.name) == func.lower(request.form['dish_name'])).first()
         if same_name_result:
             flash("A recipe by this name has already been created")
             return redirect(url_for('add_recipe_info'))
-    
+        
+        # Images added to AWS bucket
         image_file_url = save_profile_picture(recipe_picture)
         
+        # Recipe info added to session
         session["added_recipe"] = {
             'name': request.form['dish_name'],
             'serves': request.form['serves'],
@@ -414,7 +417,7 @@ def add_recipe_info():
 @app.route('/update-recipe/info/<recipe_id>', methods=['POST', 'GET'])
 def update_recipe_info(recipe_id):
     
-    # Add check to see if session has username
+    # Check is user is logged in
     if not session:
         flash("Please login to update recipes")
         return redirect(url_for('register'))
@@ -426,14 +429,13 @@ def update_recipe_info(recipe_id):
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     user = User.query.filter_by(username=session["username"]).first()
     
-    # Check if user.id is same as recipe
+    # Check to see if recipe belongs to user
     if recipe.user_id != user.id:
-        # Change to account with message
         flash("This recipe can only be edited by its author")
         return redirect(url_for('index'))
         
     if request.method == "POST":
-        
+        # Check if a new image was submitted, if not the original image is used
         try:
             request.files['inputFile']
         except KeyError:
@@ -441,21 +443,22 @@ def update_recipe_info(recipe_id):
         else:
             recipe_picture = request.files['inputFile']
             
+            # Check if image is allowed filetype
             if not allowed_file(recipe_picture.filename):
                 
                 flash("Uploaded files can only be .jpeg .jpg or .png format")
                 return redirect(url_for('update_recipe_info', recipe_id=recipe_id))
-            
+            # Images added to AWS bucket
             image_file_url = save_profile_picture(recipe_picture)
             
         
-        # Add check to see if recipe name has been added before
+        # Check to see if recipe name has been added before
         same_name_result = Recipe.query.filter(func.lower(Recipe.name) == func.lower(request.form['dish_name'])).first()
         if same_name_result and int(same_name_result.id) != int(recipe_id):
             flash("A recipe by this name has already been created")
             return redirect(url_for('update_recipe_info', recipe_id=recipe_id))
     
-
+        # Updated recipe info added to session
         session["update_recipe"] = {
             'name': request.form['dish_name'],
             'serves': request.form['serves'],
@@ -465,28 +468,27 @@ def update_recipe_info(recipe_id):
             'image_file_url': image_file_url
         }
     
-    # If post update values and redirect to ingreds
-        
         return redirect(url_for('update_recipe_ingredients', recipe_id=recipe_id))
     
     return render_template('update.html', recipe=recipe, title="Update Recipe | Info")
     
 @app.route('/add-recipe/ingredients', methods=['POST', 'GET'])
 def add_recipe_ingredients():
-    
+    # Check if user is logged in
     if not session:
         return redirect(url_for('register'))
         
     if 'username' not in session:
         return redirect(url_for('register'))
-    
+    # Check to see if user has submitted recipe info, redirect to previous step if not
     if "added_recipe" not in session:
         return redirect(url_for('add_recipe_info'))
         
     if request.method == "POST":
         
+        # Adds all ingredients submitted in form to session
         session["added_recipe_ingredients"] = {}
-
+        
         for counter, (ingred, amount) in enumerate(zip(request.form.getlist('ingredient'),
                                           request.form.getlist('amount'))):
                 
@@ -516,17 +518,11 @@ def add_recipe_ingredients():
 
         return redirect(url_for('add_recipe_submit'))
     
-    # temp_recipe = Recipe(name=name,image_file=image_file_url,serves = serves,difficulty=difficulty,time=time,views = 0,method = method,user_id = 1)
-    # db.session.add(temp_recipe)
-    # db.session.commit()
-    
-
-    
     return render_template('upload_ingred.html', title="Add Recipe | Ingredients")
 
 @app.route('/update-recipe/ingredients/<recipe_id>', methods=['POST', 'GET'])  
 def update_recipe_ingredients(recipe_id):
-    
+    # Check if user is logged in
     if not session:
         flash("Please login to update recipes")
         return redirect(url_for('register'))
@@ -535,18 +531,19 @@ def update_recipe_ingredients(recipe_id):
         flash("Please login to update recipes")
         return redirect(url_for('register'))
         
+    # Check to see if user has submitted recipe info, redirect to previous step if not
     if "update_recipe" not in session:
         return redirect(url_for('update_recipe_info', recipe_id=recipe_id))
     
     user = User.query.filter_by(username=session["username"]).first()
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     
-    # Check if user.id is same as recipe
+    # Check if recipe belongs to user
     if recipe.user_id != user.id:
-        # Change to account with message
         flash("This recipe can only be edited by its author")
         return redirect(url_for('index'))
     
+    # Retrieves all relational records from Ingredients to populate form
     search_str = "SELECT * FROM recipe_ingredients WHERE recipe_id = %s ;" % recipe_id
     all_ingreds_id = db.engine.execute(search_str).fetchall()
     
@@ -557,6 +554,7 @@ def update_recipe_ingredients(recipe_id):
     
     if request.method == "POST":
         
+        # Adds all ingredients submitted in form to session
         session["update_recipe_ingredients"] = {}
 
         for counter, (ingred, amount) in enumerate(zip(request.form.getlist('ingredient'),
@@ -594,19 +592,22 @@ def update_recipe_ingredients(recipe_id):
 
 @app.route('/add-recipe/submit', methods=['POST', 'GET'])
 def add_recipe_submit():
-    
+    # Check if user is logged in
     if not session:
         return redirect(url_for('register'))
         
     if 'username' not in session:
         return redirect(url_for('register'))
     
-    # Why is this not working?    
-    try:
-        session["added_recipe_ingredients"]
-    except KeyError:
-        redirect(url_for('add_recipe_info'))
+    # Check to see if user has submitted recipe info, redirect to first step if not
+    if "added_recipe" not in session:
+        return redirect(url_for('add_recipe_info'))
+        
+    # Check to see if user has submitted recipe ingredients, redirect to previous step if not
+    if "added_recipe_ingredients" not in session:
+        return redirect(url_for('add_recipe_ingredients'))
     
+    # Adds all recipe session data to database model
     user = User.query.filter_by(username=session["username"]).first()
     added_recipe_ingredients = session["added_recipe_ingredients"]
     added_recipe = session["added_recipe"]
@@ -635,8 +636,6 @@ def add_recipe_submit():
     
     for counter, (k, v) in enumerate(session["added_recipe_ingredients"].items()):
         
-        # Add check to see if ingredient, unit, amount has been added before, if so skip adding it and append from db
-        
         ingreds = Ingredients(name=v["ingred"],
                               is_vegetarian = v["is_vegetarian"],
                               is_vegan=v["is_vegan"],
@@ -651,6 +650,7 @@ def add_recipe_submit():
 
     if request.method == "POST":
         
+        # Commits data to database and adds recipe record
         session.pop("added_recipe")
         session.pop("added_recipe_ingredients")
         db.session.commit()
@@ -665,7 +665,7 @@ def add_recipe_submit():
 # Change to update-recipe
 @app.route('/update-recipe/submit/<recipe_id>', methods=['POST', 'GET'])
 def update_recipe_submit(recipe_id):
-    
+    # Check is user is logged in
     if not session:
         flash("Please login to update recipes")
         return redirect(url_for('register'))
@@ -674,9 +674,11 @@ def update_recipe_submit(recipe_id):
         flash("Please login to update recipes")
         return redirect(url_for('register'))
         
+    # Check to see if user has updated recipe info, redirect to first step if not
     if "update_recipe" not in session:
         return redirect(url_for('update_recipe_info', recipe_id=recipe_id))
-        
+
+    # Check to see if user has updated recipe ingredients, redirect to previous step if not
     if "update_recipe_ingredients" not in session:
         return redirect(url_for('update_recipe_info', recipe_id=recipe_id))
         
@@ -684,9 +686,8 @@ def update_recipe_submit(recipe_id):
     recipe = Recipe.query.filter_by(id=recipe_id).first()
     user = User.query.filter_by(username=session["username"]).first()
     
-    # Check if user.id is same as recipe
+    # Check to see if recipe belongs to user
     if recipe.user_id != user.id:
-        # Change to account with message
         flash("This recipe can only be edited by its author")
         return redirect(url_for('index'))
     
@@ -699,6 +700,7 @@ def update_recipe_submit(recipe_id):
         'is_gluten_free': True
     }
     
+    # Querys record for view count to display on page
     view_count = Recipe.query.filter_by(id=recipe_id).with_entities(Recipe.views).first()
     view_count = view_count[0]
 
@@ -709,6 +711,7 @@ def update_recipe_submit(recipe_id):
      
     if request.method == "POST":
         
+        # Updates record to submitted values
         temp_recipe = Recipe.query.filter_by(id=recipe_id).first()
         temp_recipe.name = session["update_recipe"]["name"]
         temp_recipe.image_file = session["update_recipe"]["image_file_url"]
@@ -717,14 +720,14 @@ def update_recipe_submit(recipe_id):
         temp_recipe.time=session["update_recipe"]["time"]
         temp_recipe.method = session["update_recipe"]["method"]
         
+        # Deletes all ingredients associated with recipe
         delete_str = "DELETE FROM recipe_ingredients WHERE recipe_id = %s ;" % recipe_id
         db.engine.execute(delete_str)
         
         db.session.commit()
         
+        # Adds all submitted ingredients
         for counter, (k, v) in enumerate(session["update_recipe_ingredients"].items()):
-        
-        # Add check to see if ingredient, unit, amount has been added before, if so skip adding it and append from db
         
             ingreds = Ingredients(name=v["ingred"],
                               is_vegetarian = v["is_vegetarian"],
@@ -735,6 +738,7 @@ def update_recipe_submit(recipe_id):
             db.session.add(ingreds)
             temp_recipe.ingredients.append(ingreds)
         
+        # Commits to database and updates record
         db.session.commit()
         
         
@@ -749,33 +753,37 @@ def update_recipe_submit(recipe_id):
     
 @app.route('/recipe/<recipe_name>/<recipe_id>')
 def recipe(recipe_name, recipe_id):
-
+    
+    # Retrieves recipe result based on recipe id
     recipe_result = Recipe.query.filter_by(id=recipe_id).first()
     ingredients_result = recipe_result.ingredients.all()
     user = []
-    # Will need to change to try
+    
     if "username" in session:
 
         user = User.query.filter_by(username=session["username"]).first()
         
-        # Change to user_id when database is updated
+        # Checks to see if user has viewed recipe before
         search_str = "SELECT * FROM viewed_recipes WHERE user_ud = %s AND recipe_id = %s ;" % (user.id, recipe_id)
         viewed_recipe = db.engine.execute(search_str).fetchall()
         
+        # Adds user to viewed_recipes with recipe id if they haven't viewed it before
+        # Recipe view is incremented by one
         if not viewed_recipe:
             user.viewed_recipe.append(recipe_result)
             recipe_result.views = recipe_result.views + 1
             db.session.commit()
-            
+    
+    # Returns boolean if ingredients of certain allergies are found for recipe
     allergies = ['is_gluten_free','is_vegan','is_vegetarian']
     allergy_info = {}
     
     temp_allergy = {}
     for allergy in allergies:
-        # Change to FALSE for Heroku
         allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe_result.id, allergy)).fetchall()
         allergy_info[allergy] = allergy_res[0][0]
     
+    # Returns list of words used in recipe, excluding filter_words
     filter_words = ["and", "with", "recipe", "on", "the", "&", "side", "of"]
     recipe_result_name_list = (x for x in recipe_result.name.split(' ') if not x in filter_words)
     
@@ -783,6 +791,7 @@ def recipe(recipe_name, recipe_id):
     related_recipe_result = []
     related_recipe_text = "Related Recipes"
     
+    # Returns up to 3 recipes using words in displayed recipe
     for word in recipe_result_name_list:
         temp_related = Recipe.query.filter(Recipe.name.like("%" + word + "%")).filter(Recipe.id != recipe_result.id)
         for temp_result in temp_related:
@@ -791,11 +800,12 @@ def recipe(recipe_name, recipe_id):
             if not temp_related in related_recipe_result:
                 related_recipe_result.append(temp_result)
     
+    # If insufficient recipes are found, top 3 recipes are returned
     if len(related_recipe_result) < 2:
         related_recipe_text = "Popular Recipes"
         related_recipe_result = Recipe.query.order_by(Recipe.views.desc()).limit(3)
         
-    
+    # Returns boolean if ingredients of certain allergies are found for related recipes
     related_allergy_info = {}
     for counter, recipe in enumerate(related_recipe_result):  
         related_allergy_info[str(recipe.id)] = {}
@@ -804,6 +814,7 @@ def recipe(recipe_name, recipe_id):
             id_num = "id_" + str(recipe.id)
             related_allergy_info[str(recipe.id)][allergy] = allergy_res[0][0]
     
+    # Page title
     title = ""
     for word in recipe_result.name.split(' '):
         title += word[0].upper() + word[1:] + " "
@@ -813,24 +824,29 @@ def recipe(recipe_name, recipe_id):
 @app.route('/account/my-recipes', methods=['POST', 'GET'])
 def account_my_recipes():
     
+    # Check to see if user if logged in
     if not session:
         return redirect(url_for('register'))
         
     if 'username' not in session:
         return redirect(url_for('register'))
-    
+
     user = User.query.filter_by(username=session['username']).first()
+    # Returns all recipes of user
     all_recipes = Recipe.query.filter_by(user_id=user.id).with_entities(Recipe.name, Recipe.id).order_by(Recipe.views.desc()).all()
     
     if request.method == "POST":
+        # If submitted password matches password in user record
         if user.password == request.form["current-password"]:
-        
+            
+            # User record is updated with submitted info
             temp_user = User.query.filter_by(id=user.id).first()
             if 'first_name' in request.form:
                 temp_user.first_name = request.form['first_name']
             if 'last_name' in request.form:
                 temp_user.last_name = request.form["last_name"]
             if 'username' in request.form:
+                # Check to see if username has been used previously
                 same_username_result = Recipe.query.filter(func.lower(User.username) == func.lower(request.form["username"])).first()
                 if same_username_result:
                     flash('An account with the same username already exists')
@@ -850,24 +866,26 @@ def account_my_recipes():
 @app.route('/register', methods=['POST', 'GET'])
 def register():
     
-
+    # Renders register page
     return render_template('register.html', title="Register")
     
 @app.route('/register_user', methods=['POST', 'GET'])
 def register_user():
     
+    # Retrieves user information from submitted form
     first_name = request.form["first_name"].lower()
     last_name = request.form["last_name"].lower() 
     username = request.form["username"].lower()
     password = request.form["password"].lower()
     
-
+    # Check to see if user by submitted username already exists
     if User.query.filter_by(username=username).count() > 0:
         flash("A user by this username already exists")
         return redirect(url_for('register'))
     else:
         session["username"] = username
         
+        # User record added to the database
         user = User(first_name=first_name,last_name=last_name, username=username,password = password)
         db.session.add(user)
         db.session.commit()
@@ -879,6 +897,7 @@ def register_user():
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     
+    # Renders login page
     return render_template('login.html', title="Login")
     
 @app.route('/login_user', methods=['POST', 'GET'])
@@ -889,12 +908,14 @@ def login_user():
     
     user = User.query.filter_by(username=username).first()
     
+    # Check to see if user by submitted username exists
     try:
         user.username
     except AttributeError:
         flash('Incorrect user credentials')
         return redirect(url_for('login'))
     
+    # Check to see if submitted password matches user record
     if str(user.password) == str(password):
         session["username"] = username
         flash('Successfully Logged in')
@@ -906,6 +927,7 @@ def login_user():
 @app.route('/logout')
 def logout():
     
+    # Removes user information from session
     session.clear()
     flash("Log out successful")
     return redirect(url_for('index'))
