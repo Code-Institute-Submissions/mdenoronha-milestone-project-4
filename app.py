@@ -135,6 +135,20 @@ def add_ingredients_to_dict():
             added_recipe_ingredients[counter] = temp_ingred
             
     return added_recipe_ingredients
+    
+def return_allergy_info(recipes):
+    
+    allergy_info = {}
+    
+    for res in recipes:
+        temp_allergy = {}
+        for allergy in allergies:
+            # Returns boolean for allergy restrictive status of ingredients
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (res.id, allergy)).fetchall()
+            temp_allergy[allergy] = allergy_res[0][0]
+        allergy_info[res.id] = temp_allergy
+        
+    return allergy_info
 
 default_filter_dict = {
             'difficulty_type': [u'easy', u'medium', u'hard'], 
@@ -143,6 +157,8 @@ default_filter_dict = {
             'serves': [u'1', u'6'], 
             'ingredients': []
         }
+        
+allergies = ['is_gluten_free','is_vegan','is_vegetarian']
 
 # Table for recipes and relevant ingredients
 recipe_ingredients = db.Table('recipe_ingredients',
@@ -303,20 +319,20 @@ def search_get():
     Loop through each result and find relational ingredients records - to identify
     if the record meets allergy requirements.
     """
-    
-
         
     allergies = ['is_gluten_free','is_vegan','is_vegetarian']
     allergy_info = {}
 
 
-    for res in result.items:
-        temp_allergy = {}
-        for allergy in allergies:
-            # Returns boolean for allergy restrictive status of ingredients
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (res.id, allergy)).fetchall()
-            temp_allergy[allergy] = allergy_res[0][0]
-        allergy_info[res.id] = temp_allergy
+    # for res in result.items:
+    #     temp_allergy = {}
+    #     for allergy in allergies:
+    #         # Returns boolean for allergy restrictive status of ingredients
+    #         allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (res.id, allergy)).fetchall()
+    #         temp_allergy[allergy] = allergy_res[0][0]
+    #     allergy_info[res.id] = temp_allergy
+    
+    allergy_info = return_allergy_info(result.items)
         
     # Page title
     title = "Search Recipes: %s" % search_term
@@ -346,7 +362,6 @@ def index():
     .replace(u'&', u'\\u0026')
     .replace(u"'", u'\\u0027'))
 
-    allergies = ['is_gluten_free','is_vegan','is_vegetarian']
     featured_recipes = []
     allergy_info = {}
     
@@ -357,13 +372,8 @@ def index():
     Loop through each result and find relational ingredients records - to identify
     if the record meets allergy requirements.
     """
-    for recipe in featured_recipes:
-        temp_allergy = {}
-        for allergy in allergies:
-            # Returns boolean for allergy restrictive status
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
-            temp_allergy[allergy] = allergy_res[0][0]
-        allergy_info[recipe.id] = temp_allergy
+        
+    allergy_info = return_allergy_info(featured_recipes)
             
     return render_template('index.html',recipe_object=recipe_object, featured_recipes=featured_recipes, allergy_info=allergy_info, title="Worldwide Recipes | Home")
     
@@ -745,8 +755,8 @@ def recipe(recipe_name, recipe_id):
             db.session.commit()
     
     # Returns boolean if ingredients of certain allergies are found for recipe
-    allergies = ['is_gluten_free','is_vegan','is_vegetarian']
     allergy_info = {}
+    
     
     temp_allergy = {}
     for allergy in allergies:
@@ -774,15 +784,26 @@ def recipe(recipe_name, recipe_id):
     if len(related_recipe_result) < 2:
         related_recipe_text = "Popular Recipes"
         related_recipe_result = Recipe.query.order_by(Recipe.views.desc()).limit(3)
+    
+    # related_allergy_info = {}    
+    # for res in related_recipe_result:
+    #     temp_allergy = {}
+    #     for allergy in allergies:
+    #         # Returns boolean for allergy restrictive status of ingredients
+    #         allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (res.id, allergy)).fetchall()
+    #         temp_allergy[allergy] = allergy_res[0][0]
+    #     related_allergy_info[res.id] = temp_allergy
+        
+    related_allergy_info = return_allergy_info(related_recipe_result)
         
     # Returns boolean if ingredients of certain allergies are found for related recipes
-    related_allergy_info = {}
-    for counter, recipe in enumerate(related_recipe_result):  
-        related_allergy_info[str(recipe.id)] = {}
-        for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
-            id_num = "id_" + str(recipe.id)
-            related_allergy_info[str(recipe.id)][allergy] = allergy_res[0][0]
+    # related_allergy_info = {}
+    # for counter, recipe in enumerate(related_recipe_result):  
+    #     related_allergy_info[str(recipe.id)] = {}
+    #     for allergy in allergies:
+    #         allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
+    #         # id_num = "id_" + str(recipe.id)
+    #         related_allergy_info[str(recipe.id)][allergy] = allergy_res[0][0]
     
     # Page title
     title = ""
