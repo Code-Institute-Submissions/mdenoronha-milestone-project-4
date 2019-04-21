@@ -37,6 +37,7 @@ User
 username = "testing-account-not-viewed-recipe"
 Recipe
 name = "star-pizzas"
+user_id = 19
 
 viewed_recipe
 user = "testing-account-viewed-recipe"
