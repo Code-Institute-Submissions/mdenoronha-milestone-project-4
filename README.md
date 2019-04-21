@@ -110,6 +110,23 @@ Testing
 ---------------
 Python testing document can be found [here](https://github.com/mdenoronha/milestone-project-4/blob/master/app_test.py)
 The file is run by using 'python app_test.py' command
+The testing file uses these records and should be present in the database when testing:
+Users
+username = "testing-account-viewed-recipe"
+username = "mstonieri"
+username = "testing-account-not-viewed-recipe"
+
+Recipes
+name = "star-pizzas"
+
+viewed_recipe
+user = "testing-account-viewed-recipe"
+recipe = "star-pizzas"
+
+The following records must not exists:
+viewed_recipes
+user = "testing-account-not-viewed-recipe"
+recipe = "star-pizzas"
 
 ### Testing through app_test.py ###
 Test  | Status
