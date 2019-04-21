@@ -103,6 +103,46 @@ def save_profile_picture(form_picture):
     s3.Bucket('recipe-db').put_object(Key="static/recipe_images/" + picture_fn, Body=form_picture)
     
     return picture_fn 
+    
+def add_ingredients_to_dict():
+    
+    added_recipe_ingredients = {}
+        
+    for counter, (ingred, amount) in enumerate(zip(request.form.getlist('ingredient'),
+                                      request.form.getlist('amount'))):
+            
+            is_vegetarian = False
+            is_vegan = False
+            is_gluten_free = False
+            
+            if request.form.getlist('vegetarian-' + str(counter)):
+                is_vegetarian = True
+                
+            if request.form.getlist('vegan-' + str(counter)):
+                is_vegan = True
+            
+            if request.form.getlist('gluten-free-' + str(counter)):
+                is_gluten_free = True
+        
+            temp_ingred = {
+                "ingred": ingred.lower(),
+                "amount": amount.lower(),
+                "is_vegetarian" : is_vegetarian,
+                "is_vegan" : is_vegan,
+                "is_gluten_free" : is_gluten_free
+            }
+            
+            added_recipe_ingredients[counter] = temp_ingred
+            
+    return added_recipe_ingredients
+
+default_filter_dict = {
+            'difficulty_type': [u'easy', u'medium', u'hard'], 
+            'recipe_type': [], 
+            'time': [u'10', u'180'], 
+            'serves': [u'1', u'6'], 
+            'ingredients': []
+        }
 
 # Table for recipes and relevant ingredients
 recipe_ingredients = db.Table('recipe_ingredients',
@@ -168,14 +208,9 @@ Used when linking to a search page with specific recipes filtered (e.g. all vega
 @app.route('/auto-search/<filter_to_add>')
 def auto_search(filter_to_add):
     # Sets user search filters to default (with url parameter as recipe type)
-    session["filters"] = {
-            'difficulty_type': [u'easy', u'medium', u'hard'], 
-            'recipe_type': [filter_to_add], 
-            'time': [u'10', u'180'], 
-            'serves': [u'1', u'6'], 
-            'ingredients': []
-        }
-        
+    default_filter_dict["recipe_type"] = [filter_to_add]
+    session["filters"] = default_filter_dict
+    
     session["search_term"] = ""
     
     return redirect(url_for('search_get'))
@@ -250,13 +285,7 @@ def search_get():
     
     # If session doesn't contain filter, reset to default
     if "filters" not in session:
-        session["filters"] = {
-            'difficulty_type': [u'easy', u'medium', u'hard'], 
-            'recipe_type': [], 
-            'time': [u'10', u'180'], 
-            'serves': [u'1', u'6'], 
-            'ingredients': []
-        }
+        session["filters"] = default_filter_dict
     
     # If session doesn't contain search term, reset to no search
     if not "search_term" in session:
@@ -274,23 +303,20 @@ def search_get():
     Loop through each result and find relational ingredients records - to identify
     if the record meets allergy requirements.
     """
-    allergies = ['is_gluten_free','is_vegan','is_vegetarian']
-    search_recipes = []
-    allergy_info = {}
     
-    search_recipes_ids = []
-    for res in result.items:
-      search_recipes_ids.append(res.id)
 
-    for recipe in search_recipes_ids:
-        temp_recipe = Recipe.query.filter_by(id=recipe).first()
-        search_recipes.append(temp_recipe)
+        
+    allergies = ['is_gluten_free','is_vegan','is_vegetarian']
+    allergy_info = {}
+
+
+    for res in result.items:
         temp_allergy = {}
         for allergy in allergies:
             # Returns boolean for allergy restrictive status of ingredients
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (res.id, allergy)).fetchall()
             temp_allergy[allergy] = allergy_res[0][0]
-        allergy_info[recipe] = temp_allergy
+        allergy_info[res.id] = temp_allergy
         
     # Page title
     title = "Search Recipes: %s" % search_term
@@ -335,7 +361,7 @@ def index():
         temp_allergy = {}
         for allergy in allergies:
             # Returns boolean for allergy restrictive status
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe.id, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
             temp_allergy[allergy] = allergy_res[0][0]
         allergy_info[recipe.id] = temp_allergy
             
@@ -457,7 +483,8 @@ def update_recipe_info(recipe_id):
         if same_name_result and int(same_name_result.id) != int(recipe_id):
             flash("A recipe by this name has already been created")
             return redirect(url_for('update_recipe_info', recipe_id=recipe_id))
-    
+        
+        # *** Loop through request form ***
         # Updated recipe info added to session
         session["update_recipe"] = {
             'name': request.form['dish_name'],
@@ -483,39 +510,11 @@ def add_recipe_ingredients():
     # Check to see if user has submitted recipe info, redirect to previous step if not
     if "added_recipe" not in session:
         return redirect(url_for('add_recipe_info'))
-        
+       
     if request.method == "POST":
-        
         # Adds all ingredients submitted in form to session
-        session["added_recipe_ingredients"] = {}
+        session["added_recipe_ingredients"] = add_ingredients_to_dict()
         
-        for counter, (ingred, amount) in enumerate(zip(request.form.getlist('ingredient'),
-                                          request.form.getlist('amount'))):
-                
-                
-                is_vegetarian = False
-                is_vegan = False
-                is_gluten_free = False
-                
-                if request.form.getlist('vegetarian-' + str(counter)):
-                    is_vegetarian = True
-
-                if request.form.getlist('vegan-' + str(counter)):
-                    is_vegan = True
-                
-                if request.form.getlist('gluten-free-' + str(counter)):
-                    is_gluten_free = True
-            
-                temp_ingred = {
-                    "ingred": ingred.lower(),
-                    "amount": amount.lower(),
-                    "is_vegetarian" : is_vegetarian,
-                    "is_vegan" : is_vegan,
-                    "is_gluten_free" : is_gluten_free
-                }
-                session["added_recipe_ingredients"][counter] = temp_ingred
-    
-
         return redirect(url_for('add_recipe_submit'))
     
     return render_template('upload_ingred.html', title="Add Recipe | Ingredients")
@@ -555,32 +554,7 @@ def update_recipe_ingredients(recipe_id):
     if request.method == "POST":
         
         # Adds all ingredients submitted in form to session
-        session["update_recipe_ingredients"] = {}
-
-        for counter, (ingred, amount) in enumerate(zip(request.form.getlist('ingredient'),
-                                          request.form.getlist('amount'))):
-                
-                is_vegetarian = False
-                is_vegan = False
-                is_gluten_free = False
-                
-                if request.form.getlist('vegetarian-' + str(counter)):
-                    is_vegetarian = True
-
-                if request.form.getlist('vegan-' + str(counter)):
-                    is_vegan = True
-                
-                if request.form.getlist('gluten-free-' + str(counter)):
-                    is_gluten_free = True
-            
-                temp_ingred = {
-                    "ingred": ingred,
-                    "amount": amount,
-                    "is_vegetarian" : is_vegetarian,
-                    "is_vegan" : is_vegan,
-                    "is_gluten_free" : is_gluten_free
-                }
-                session["update_recipe_ingredients"][counter] = temp_ingred
+        session["update_recipe_ingredients"] = add_ingredients_to_dict()
     
         return redirect(url_for('update_recipe_submit', recipe_id=recipe_id))
     
@@ -776,7 +750,7 @@ def recipe(recipe_name, recipe_id):
     
     temp_allergy = {}
     for allergy in allergies:
-        allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe_result.id, allergy)).fetchall()
+        allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe_result.id, allergy)).fetchall()
         allergy_info[allergy] = allergy_res[0][0]
     
     # Returns list of words used in recipe, excluding filter_words
@@ -806,7 +780,7 @@ def recipe(recipe_name, recipe_id):
     for counter, recipe in enumerate(related_recipe_result):  
         related_allergy_info[str(recipe.id)] = {}
         for allergy in allergies:
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = false))' % (recipe.id, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
             id_num = "id_" + str(recipe.id)
             related_allergy_info[str(recipe.id)][allergy] = allergy_res[0][0]
     
@@ -928,7 +902,7 @@ def logout():
     flash("Log out successful")
     return redirect(url_for('index'))
     
-# Change debug mode
+# ***Change debug mode((()
 if __name__ == '__main__':
     app.run(host=os.environ.get('IP'),
             port=int(os.environ.get('PORT')),
