@@ -143,7 +143,7 @@ def return_allergy_info(recipes):
         temp_allergy = {}
         for allergy in allergies:
             # Returns boolean for allergy restrictive status of ingredients
-            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (res.id, allergy)).fetchall()
+            allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = False))' % (res.id, allergy)).fetchall()
             temp_allergy[allergy] = allergy_res[0][0]
         allergy_info[res.id] = temp_allergy
         
@@ -482,7 +482,6 @@ def update_recipe_info(recipe_id):
             flash("A recipe by this name has already been created")
             return redirect(url_for('update_recipe_info', recipe_id=recipe_id))
         
-        # *** Loop through request form ***
         # Updated recipe info added to session
         session["update_recipe"] = {
             'name': request.form['dish_name'],
@@ -736,7 +735,7 @@ def recipe(recipe_name, recipe_id):
     
     temp_allergy = {}
     for allergy in allergies:
-        allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe_result.id, allergy)).fetchall()
+        allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = False))' % (recipe_result.id, allergy)).fetchall()
         allergy_info[allergy] = allergy_res[0][0]
     
     # Returns list of words used in recipe, excluding filter_words
@@ -880,7 +879,6 @@ def logout():
     flash("Log out successful")
     return redirect(url_for('index'))
     
-# ***Change debug mode((()
 if __name__ == '__main__':
     app.run(host=os.environ.get('IP'),
             port=int(os.environ.get('PORT')),
