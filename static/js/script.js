@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(document).ready(function(){
     // Initialise modal
     $('.modal').modal();
     // Initialise dropdowns
@@ -26,7 +26,6 @@ $(document).ready(function() {
         var alert_data_list = eval(alert_data)
 
         for (i = 0; i < alert_data_list.length; i++) {
-            console.log("alert")
             M.toast({ html: alert_data_list[i] })
         }
     }
