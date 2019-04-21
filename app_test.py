@@ -26,6 +26,27 @@ test_added_ingredients = {
                         u'is_vegetarian': True, 
                         u'is_vegan': False, 
                         u'is_gluten_free': False}}
+                        
+"""
+The test file uses the following database records:
+User
+username = "testing-account-viewed-recipe"
+User
+username = "mstonieri"
+User
+username = "testing-account-not-viewed-recipe"
+Recipe
+name = "star-pizzas"
+
+viewed_recipe
+user = "testing-account-viewed-recipe"
+recipe = "star-pizzas"
+
+The following records must not exists:
+viewed_recipes
+user = "testing-account-not-viewed-recipe"
+recipe = "star-pizzas"
+"""
 
 class RecipeTests(TestCase):
     
@@ -42,11 +63,17 @@ class RecipeTests(TestCase):
     def setUp(self):
         
         db.create_all()
+        
 
     def tearDown(self):
-
+        
         db.session.remove()
         db.drop_all()
+        
+    # Test_record_id
+    original_result = Recipe.query.filter_by(name='star pizzas').first()
+    recipe_id = original_result.id
+    global recipe_id
     
     # Test Homepage 200
     def test_home_200_response(self):
@@ -63,7 +90,7 @@ class RecipeTests(TestCase):
     # Test random recipe page
     def test_recipe_page_200_response(self):
         with app.test_client() as client:
-            result = client.get("/recipe/star-pizzas/23")
+            result = client.get("/recipe/star-pizzas/%s" % (recipe_id))
             self.assertEqual(result.status_code, 200)
             
     # Test register page
@@ -99,7 +126,7 @@ class RecipeTests(TestCase):
     def test_add_submit_200_response(self):
         with app.test_client() as client:
             with client.session_transaction() as sess:
-                sess["username"] = "jmccroary0dfw"
+                sess["username"] = "mstonieri"
                 sess["added_recipe"] = test_added_recipe
                 sess["added_recipe_ingredients"] = test_added_ingredients
             result = client.get("/add-recipe/submit")
@@ -109,27 +136,27 @@ class RecipeTests(TestCase):
     def test_update_info_200_response(self):
         with app.test_client() as client:
             with client.session_transaction() as sess:
-                sess["username"] = "jmccroary0dfw"
-            result = client.get("/update-recipe/info/13")
+                sess["username"] = "mstonieri"
+            result = client.get("/update-recipe/info/%s" % (recipe_id))
             self.assertEqual(result.status_code, 200)
     
     # Test update recipe page - ingredients 
     def test_update_ingredients_200_response(self):
         with app.test_client() as client:
             with client.session_transaction() as sess:
-                sess["username"] = "jmccroary0dfw"
+                sess["username"] = "mstonieri"
                 sess["update_recipe"] = test_added_recipe
-            result = client.get("/update-recipe/ingredients/13")
+            result = client.get("/update-recipe/ingredients/%s" % (recipe_id))
             self.assertEqual(result.status_code, 200)
     
     # Test update recipe page - submit
     def test_update_submit_200_response(self):
         with app.test_client() as client:
             with client.session_transaction() as sess:
-                sess["username"] = "jmccroary0dfw"
+                sess["username"] = "mstonieri"
                 sess["update_recipe"] = test_added_recipe
                 sess["update_recipe_ingredients"] = test_added_ingredients
-            result = client.get("/update-recipe/submit/13")
+            result = client.get("/update-recipe/submit/%s" % (recipe_id))
             self.assertEqual(result.status_code, 200)
             
     # Test user authentication for updating recipes
@@ -139,8 +166,8 @@ class RecipeTests(TestCase):
         with app.test_client() as client:
             with client.session_transaction() as sess:
                 # Incorrect user
-                sess["username"] = "pbeckworth1"
-            result = client.get("/update-recipe/info/13")
+                sess["username"] = "testing-account-not-viewed-recipe"
+            result = client.get("/update-recipe/info/%s" % (recipe_id))
             self.assertEqual(result.status_code, 302)
             self.assertEqual(result.location, url_for('index', _external=True))
     
@@ -149,9 +176,9 @@ class RecipeTests(TestCase):
         with app.test_client() as client:
             with client.session_transaction() as sess:
                 # Incorrect user
-                sess["username"] = "pbeckworth1"
+                sess["username"] = "testing-account-not-viewed-recipe"
                 sess["update_recipe"] = test_added_recipe
-            result = client.get("/update-recipe/ingredients/13")
+            result = client.get("/update-recipe/ingredients/%s" % (recipe_id))
             self.assertEqual(result.status_code, 302)
             self.assertEqual(result.location, url_for('index', _external=True))
     
@@ -160,10 +187,10 @@ class RecipeTests(TestCase):
         with app.test_client() as client:
             with client.session_transaction() as sess:
                 # Incorrect user
-                sess["username"] = "pbeckworth1"
+                sess["username"] = "testing-account-not-viewed-recipe"
                 sess["update_recipe"] = test_added_recipe
                 sess["update_recipe_ingredients"] = test_added_ingredients
-            result = client.get("/update-recipe/submit/13")
+            result = client.get("/update-recipe/submit/%s" % (recipe_id))
             self.assertEqual(result.status_code, 302)
             self.assertEqual(result.location, url_for('index', _external=True))
     
@@ -173,7 +200,7 @@ class RecipeTests(TestCase):
     increases by one
     """
     # View count before view
-    original_result = Recipe.query.filter_by(id=23).first()
+    original_result = Recipe.query.filter_by(name='star pizzas').first()
     original_result_views = original_result.views
     global original_result_views
     
@@ -184,8 +211,8 @@ class RecipeTests(TestCase):
                 viewed_recipe = None
             
             # View count after view
-            result = client.get("/recipe/star-pizzas/23")
-            updated_result = Recipe.query.filter_by(id=23).first()
+            result = client.get("/recipe/star-pizzas/%s" % (recipe_id))
+            updated_result = Recipe.query.filter_by(name='star pizzas').first()
             updated_result_views = updated_result.views    
             
             # View count increased by one
@@ -197,7 +224,7 @@ class RecipeTests(TestCase):
             db.session.commit()
     
     # View count shouldn't change as the user has viewed the recipe before
-    original_result = Recipe.query.filter_by(id=23).first()
+    original_result = Recipe.query.filter_by(name='star pizzas').first()
     original_result_views = original_result.views
     global original_result_views
             
@@ -208,8 +235,8 @@ class RecipeTests(TestCase):
                 viewed_recipe = None
             
             # View count after view
-            result = client.get("/recipe/star-pizzas/23")
-            updated_result = Recipe.query.filter_by(id=23).first()
+            result = client.get("/recipe/star-pizzas/%s" % (recipe_id))
+            updated_result = Recipe.query.filter_by(name='star pizzas').first()
             updated_result_views = updated_result.views    
             
             # View count stays the same
@@ -220,7 +247,7 @@ class RecipeTests(TestCase):
         with app.test_client() as client:
             with client.session_transaction() as sess:
 
-                sess["username"] = "pbeckworth1"
+                sess["username"] = "testing-account-viewed-recipe"
                 sess["added_recipe"] = test_added_recipe
                 sess["added_recipe_ingredients"] = test_added_ingredients
                 
