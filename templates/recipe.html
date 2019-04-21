@@ -82,21 +82,21 @@
                     </div>
                     <hr>
                     <div class="card-content not-last recipe-info">
-                        {% if related_allergy_info[related_recipe.id | string]['is_vegetarian'] %}
+                        {% if related_allergy_info[related_recipe.id]['is_vegetarian'] %}
                         <p class="active-allergy vegetarian">VEGETARIAN</p>
                         {% else %}
                         <p class="inactive-allergy vegetarian"><strike>VEGETARIAN</strike></p>
                         {% endif %}
                     </div>
                     <div class="card-content not-last recipe-info">
-                        {% if related_allergy_info[related_recipe.id | string]['is_vegan'] %}
+                        {% if related_allergy_info[related_recipe.id]['is_vegan'] %}
                         <p class="active-allergy vegan">VEGAN</p>
                         {% else %}
                         <p class="inactive-allergy"><strike>VEGAN</strike></p>
                         {% endif %}
                     </div>
                     <div class="card-content recipe-info">
-                        {% if related_allergy_info[related_recipe.id | string]['is_gluten_free'] %}
+                        {% if related_allergy_info[related_recipe.id]['is_gluten_free'] %}
                         <p class="active-allergy gluten-free">GLUTEN FREE</p>
                         {% else %}
                         <p class="inactive-allergy"><strike>GLUTEN FREE</strike></p>
