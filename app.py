@@ -108,31 +108,30 @@ def add_ingredients_to_dict():
     
     added_recipe_ingredients = {}
         
-    for counter, (ingred, amount) in enumerate(zip(request.form.getlist('ingredient'),
-                                      request.form.getlist('amount'))):
+    for counter, (ingred, amount) in enumerate(zip(request.form.getlist('ingredient'), request.form.getlist('amount'))):
             
-            is_vegetarian = False
-            is_vegan = False
-            is_gluten_free = False
-            
-            if request.form.getlist('vegetarian-' + str(counter)):
-                is_vegetarian = True
-                
-            if request.form.getlist('vegan-' + str(counter)):
-                is_vegan = True
-            
-            if request.form.getlist('gluten-free-' + str(counter)):
-                is_gluten_free = True
+        is_vegetarian = False
+        is_vegan = False
+        is_gluten_free = False
         
-            temp_ingred = {
-                "ingred": ingred.lower(),
-                "amount": amount.lower(),
-                "is_vegetarian" : is_vegetarian,
-                "is_vegan" : is_vegan,
-                "is_gluten_free" : is_gluten_free
-            }
+        if request.form.getlist('vegetarian-' + str(counter)):
+            is_vegetarian = True
             
-            added_recipe_ingredients[counter] = temp_ingred
+        if request.form.getlist('vegan-' + str(counter)):
+            is_vegan = True
+        
+        if request.form.getlist('gluten-free-' + str(counter)):
+            is_gluten_free = True
+    
+        temp_ingred = {
+            "ingred": ingred.lower(),
+            "amount": amount.lower(),
+            "is_vegetarian" : is_vegetarian,
+            "is_vegan" : is_vegan,
+            "is_gluten_free" : is_gluten_free
+        }
+        
+        added_recipe_ingredients[counter] = temp_ingred
             
     return added_recipe_ingredients
     
@@ -789,6 +788,7 @@ def account_my_recipes():
             
             # User record is updated with submitted info
             temp_user = User.query.filter_by(id=user.id).first()
+            
             if 'first_name' in request.form:
                 temp_user.first_name = request.form['first_name']
             if 'last_name' in request.form:
@@ -884,5 +884,4 @@ def logout():
 if __name__ == '__main__':
     app.run(host=os.environ.get('IP'),
             port=int(os.environ.get('PORT')),
-            debug=True)
-            
+            debug=False)
