@@ -149,6 +149,15 @@ def return_allergy_info(recipes):
         allergy_info[res.id] = temp_allergy
         
     return allergy_info
+    
+def session_check():
+    if not session:
+        return True
+        
+    if not 'username' in session:
+        return True
+    
+    return False
 
 default_filter_dict = {
             'difficulty_type': [u'easy', u'medium', u'hard'], 
@@ -322,15 +331,6 @@ def search_get():
         
     allergies = ['is_gluten_free','is_vegan','is_vegetarian']
     allergy_info = {}
-
-
-    # for res in result.items:
-    #     temp_allergy = {}
-    #     for allergy in allergies:
-    #         # Returns boolean for allergy restrictive status of ingredients
-    #         allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (res.id, allergy)).fetchall()
-    #         temp_allergy[allergy] = allergy_res[0][0]
-    #     allergy_info[res.id] = temp_allergy
     
     allergy_info = return_allergy_info(result.items)
         
@@ -380,11 +380,7 @@ def index():
 @app.route('/delete/<recipe_id>')
 def delete_recipe(recipe_id):
     
-    # Check if user is logged in
-    if not session:
-        return redirect(url_for('index'))
-        
-    if not 'username' in session:
+    if session_check():
         return redirect(url_for('index'))
     
     # Check if recipe belongs to user
@@ -412,10 +408,7 @@ def delete_recipe(recipe_id):
 def add_recipe_info():
     
     # Check if user is logged in
-    if not session:
-        return redirect(url_for('register'))
-        
-    if 'username' not in session:
+    if session_check():
         return redirect(url_for('register'))
     
     if request.method == 'POST':
@@ -454,11 +447,7 @@ def add_recipe_info():
 def update_recipe_info(recipe_id):
     
     # Check is user is logged in
-    if not session:
-        flash("Please login to update recipes")
-        return redirect(url_for('register'))
-        
-    if 'username' not in session:
+    if session_check():
         flash("Please login to update recipes")
         return redirect(url_for('register'))
     
@@ -511,12 +500,11 @@ def update_recipe_info(recipe_id):
     
 @app.route('/add-recipe/ingredients', methods=['POST', 'GET'])
 def add_recipe_ingredients():
+    
     # Check if user is logged in
-    if not session:
+    if session_check():
         return redirect(url_for('register'))
         
-    if 'username' not in session:
-        return redirect(url_for('register'))
     # Check to see if user has submitted recipe info, redirect to previous step if not
     if "added_recipe" not in session:
         return redirect(url_for('add_recipe_info'))
@@ -532,11 +520,7 @@ def add_recipe_ingredients():
 @app.route('/update-recipe/ingredients/<recipe_id>', methods=['POST', 'GET'])  
 def update_recipe_ingredients(recipe_id):
     # Check if user is logged in
-    if not session:
-        flash("Please login to update recipes")
-        return redirect(url_for('register'))
-        
-    if 'username' not in session:
+    if session_check():
         flash("Please login to update recipes")
         return redirect(url_for('register'))
         
@@ -573,10 +557,7 @@ def update_recipe_ingredients(recipe_id):
 @app.route('/add-recipe/submit', methods=['POST', 'GET'])
 def add_recipe_submit():
     # Check if user is logged in
-    if not session:
-        return redirect(url_for('register'))
-        
-    if 'username' not in session:
+    if session_check():
         return redirect(url_for('register'))
     
     # Check to see if user has submitted recipe info, redirect to first step if not
@@ -646,11 +627,7 @@ def add_recipe_submit():
 @app.route('/update-recipe/submit/<recipe_id>', methods=['POST', 'GET'])
 def update_recipe_submit(recipe_id):
     # Check is user is logged in
-    if not session:
-        flash("Please login to update recipes")
-        return redirect(url_for('register'))
-        
-    if 'username' not in session:
+    if session_check():
         flash("Please login to update recipes")
         return redirect(url_for('register'))
         
@@ -785,25 +762,8 @@ def recipe(recipe_name, recipe_id):
         related_recipe_text = "Popular Recipes"
         related_recipe_result = Recipe.query.order_by(Recipe.views.desc()).limit(3)
     
-    # related_allergy_info = {}    
-    # for res in related_recipe_result:
-    #     temp_allergy = {}
-    #     for allergy in allergies:
-    #         # Returns boolean for allergy restrictive status of ingredients
-    #         allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (res.id, allergy)).fetchall()
-    #         temp_allergy[allergy] = allergy_res[0][0]
-    #     related_allergy_info[res.id] = temp_allergy
         
     related_allergy_info = return_allergy_info(related_recipe_result)
-        
-    # Returns boolean if ingredients of certain allergies are found for related recipes
-    # related_allergy_info = {}
-    # for counter, recipe in enumerate(related_recipe_result):  
-    #     related_allergy_info[str(recipe.id)] = {}
-    #     for allergy in allergies:
-    #         allergy_res = db.engine.execute('SELECT (NOT EXISTS (SELECT * FROM ingredients INNER JOIN recipe_ingredients on ingredients.id = recipe_ingredients.ingredients_id WHERE recipe_ingredients.recipe_id = %s AND ingredients.%s = 0))' % (recipe.id, allergy)).fetchall()
-    #         # id_num = "id_" + str(recipe.id)
-    #         related_allergy_info[str(recipe.id)][allergy] = allergy_res[0][0]
     
     # Page title
     title = ""
@@ -816,10 +776,7 @@ def recipe(recipe_name, recipe_id):
 def account_my_recipes():
     
     # Check to see if user if logged in
-    if not session:
-        return redirect(url_for('register'))
-        
-    if 'username' not in session:
+    if session_check():
         return redirect(url_for('register'))
 
     user = User.query.filter_by(username=session['username']).first()
