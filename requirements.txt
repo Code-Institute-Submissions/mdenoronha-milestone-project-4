@@ -4,7 +4,7 @@ Flask-SQLAlchemy==2.3.2
 Flask-S3==0.3.3
 Jinja2==2.10.1
 MarkupSafe==1.1.0
-Werkzeug==0.14.1
+Werkzeug==0.15.5
 boto3==1.9.101
 botocore==1.12.101
 docutils==0.14
